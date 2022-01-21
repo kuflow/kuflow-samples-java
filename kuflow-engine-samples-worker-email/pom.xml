@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.kuflow.engine.samples</groupId>
+    <artifactId>kuflow-engine-samples</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>kuflow-engine-samples-worker-email</artifactId>
+  <packaging>jar</packaging>
+
+  <name>KuFlow :: Engine :: :: Samples :: Worker :: Email</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.kuflow.engine.client</groupId>
+      <artifactId>kuflow-engine-client-activity-impl-task</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.kuflow.engine.client</groupId>
+      <artifactId>kuflow-engine-client-activity-impl-email</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.hubspot.maven.plugins</groupId>
+        <artifactId>prettier-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
