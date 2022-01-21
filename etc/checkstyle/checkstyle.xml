@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2021-present KuFlow S.L.
+  ~
+  ~ All rights reserved.
+  -->
+
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN" "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="com.puppycrawl.tools.checkstyle.Checker">
+
+  <module name="SuppressionFilter">
+		<property name="file" value="${checkstyle.suppressions.location}" />
+	</module>
+
+  <module name="Header">
+    <property name="headerFile" value="${checkstyle.header.file}" />
+    <property name="fileExtensions" value="java" />
+  </module>
+
+  <module name="FileTabCharacter"/>
+
+  <!-- Allow suppression with comments
+     // CHECKSTYLE:OFF
+     ... ignored content ...
+     // CHECKSTYLE:ON
+  -->
+  <module name="SuppressWithPlainTextCommentFilter"/>
+
+  <module name="com.puppycrawl.tools.checkstyle.TreeWalker">
+
+    <!-- Block Checks -->
+    <module name="com.puppycrawl.tools.checkstyle.checks.blocks.RightCurlyCheck" />
+
+    <!-- Imports -->
+    <module name="UnusedImports" />
+    <module name="AvoidStarImport" />
+    <module name="RedundantImport" />
+
+    <!-- Reject any org.junit import that's not also org.junit.jupiter: -->
+    <module name="IllegalImport">
+      <property name="regexp" value="true"/>
+      <property name="illegalClasses" value="^org\.junit\.(?!jupiter\.).+"/>
+    </module>
+
+    <!-- Regexp -->
+    <module name="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineJavaCheck">
+      <property name="maximum" value="0"/>
+      <property name="format" value="org\.mockito\.Mockito\.(when|doThrow|doAnswer)" />
+      <property name="message" value="Please use BDDMockito imports." />
+      <property name="ignoreComments" value="true" />
+    </module>
+    <module name="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineJavaCheck">
+      <property name="maximum" value="0"/>
+      <property name="format" value="org\.junit\.Assert\.assert" />
+      <property name="message" value="Please use AssertJ imports." />
+      <property name="ignoreComments" value="true" />
+    </module>
+    <module name="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpCheck">
+      <property name="format" value="[ \t]+$" />
+      <property name="illegalPattern" value="true" />
+      <property name="message" value="Trailing whitespace" />
+    </module>
+
+    <module name="com.puppycrawl.tools.checkstyle.checks.coding.RequireThisCheck">
+      <property name="validateOnlyOverlapping" value="false" />
+    </module>
+
+  </module>
+
+</module>

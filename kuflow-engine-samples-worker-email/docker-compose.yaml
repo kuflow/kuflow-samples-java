@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+
+  fake-smtp-server:
+    image: gessnerfl/fake-smtp-server:1.7.1
+    container_name: fake-smtp-server
+    environment:
+      - FAKESMTP_AUTHENTICATION_USERNAME=username
+      - FAKESMTP_AUTHENTICATION_PASSWORD=password
+    ports:
+      - 3025:5025
+      - 8082:5080
+      - 8083:5081
+    networks:
+      - kuflow-example-network
+
+networks:
+  kuflow-example-network:
+    driver: bridge
+    name: kuflow-example-net

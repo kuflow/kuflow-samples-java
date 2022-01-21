@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.6.2</version>
+    <relativePath /> <!-- lookup parent from repository -->
+  </parent>
+
+  <groupId>com.kuflow.engine.samples</groupId>
+  <artifactId>kuflow-engine-samples</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>KuFlow Engine Samples</name>
+  <description>KuFlow examples written in Java</description>
+
+  <modules>
+    <module>kuflow-engine-samples-worker-email</module>
+  </modules>
+
+  <properties>
+    <maven.version>3.8.1</maven.version>
+    <java.version>11</java.version>
+    <resource.delimiter>#</resource.delimiter>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <project.testresult.directory>${project.build.directory}/test-results</project.testresult.directory>
+    <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss</maven.build.timestamp.format>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <argLine>-Djava.security.egd=file:/dev/./urandom -Xmx256m</argLine>
+
+    <!-- Maven plugin dependencies -->
+    <maven-checkstyle.version>3.1.2</maven-checkstyle.version>
+    <checkstyle.version>9.1</checkstyle.version>
+    <prettier-maven-plugin.version>0.17</prettier-maven-plugin.version>
+    <prettier-java.version>1.6.1</prettier-java.version>
+
+    <!-- Spring dependencies -->
+    <spring-boot.version>2.6.2</spring-boot.version>
+    <!-- Spring Cloud for Boot Version 2.4.x, 2.5.x -->
+    <spring-cloud.version>2021.0.0</spring-cloud.version>
+
+    <!-- Application dependencies -->
+    <kuflow-engine-client.version>0.0.1</kuflow-engine-client.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.kuflow.engine.client</groupId>
+        <artifactId>kuflow-engine-client-activity-impl-task</artifactId>
+        <version>${kuflow-engine-client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.kuflow.engine.client</groupId>
+        <artifactId>kuflow-engine-client-activity-impl-email</artifactId>
+        <version>${kuflow-engine-client.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${maven-checkstyle.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>checkstyle-validation</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>validate</phase>
+              <inherited>true</inherited>
+              <configuration>
+                <consoleOutput>true</consoleOutput>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                <!-- maven.multiModuleProjectDirectory -->
+                <configLocation>${project.parent.basedir}/etc/checkstyle/checkstyle.xml</configLocation>
+                <headerLocation>${project.parent.basedir}/etc/checkstyle/checkstyle-header.txt</headerLocation>
+                <suppressionsLocation>${project.parent.basedir}/etc/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+                <suppressionsFileExpression>checkstyle.suppressions.location</suppressionsFileExpression>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>com.hubspot.maven.plugins</groupId>
+          <artifactId>prettier-maven-plugin</artifactId>
+          <version>${prettier-maven-plugin.version}</version>
+          <configuration>
+            <prettierJavaVersion>${prettier-java.version}</prettierJavaVersion>
+            <ignoreEditorConfig>false</ignoreEditorConfig>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>validate</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <url>https://github.com/kuflow/kuflow-engine-samples-java</url>
+
+  <organization>
+    <name>KuFlow S.L.</name>
+    <url>https://kuflow.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>KuFlow</name>
+      <email>kuflow@kuflow.com</email>
+      <organization>KuFlow S.L.</organization>
+      <organizationUrl>https://kuflow.com</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:kuflow/kuflow-engine-samples-java.git</connection>
+    <developerConnection>scm:git:git@github.com:kuflow/kuflow-engine-samples-java.git</developerConnection>
+    <url>https://github.com/kuflow/kuflow-engine-samples-java</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/kuflow/kuflow-engine-samples-java/issues</url>
+  </issueManagement>
+
+</project>
