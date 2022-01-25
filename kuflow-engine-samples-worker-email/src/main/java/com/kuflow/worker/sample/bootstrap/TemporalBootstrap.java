@@ -6,12 +6,10 @@
 
 package com.kuflow.worker.sample.bootstrap;
 
-import com.kuflow.engine.client.activity.api.email.service.EmailActivities;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowActivities;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowActivitiesDelegate;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowDetachedActivities;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowDetachedActivitiesDelegate;
-import com.kuflow.engine.client.activity.impl.email.service.EmailActivitiesDelegate;
+import com.kuflow.engine.client.activity.email.EmailActivities;
+import com.kuflow.engine.client.activity.email.EmailActivitiesDelegate;
+import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
+import com.kuflow.engine.client.activity.kuflow.KuFlowActivitiesDelegate;
 import com.kuflow.worker.sample.config.property.ApplicationProperties;
 import com.kuflow.worker.sample.workflow.sample.SampleWorkflowImpl;
 import io.temporal.worker.Worker;
@@ -32,8 +30,6 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final KuFlowActivities kuflowActivities;
 
-    private final KuFlowDetachedActivities kuflowDetachedActivities;
-
     private final EmailActivities emailActivities;
 
     private final ApplicationProperties applicationProperties;
@@ -42,13 +38,11 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
         ApplicationProperties applicationProperties,
         WorkerFactory factory,
         KuFlowActivities kuflowActivities,
-        KuFlowDetachedActivities kuflowDetachedActivities,
         EmailActivities emailActivities
     ) {
         this.applicationProperties = applicationProperties;
         this.factory = factory;
         this.kuflowActivities = kuflowActivities;
-        this.kuflowDetachedActivities = kuflowDetachedActivities;
         this.emailActivities = emailActivities;
     }
 
@@ -69,7 +63,6 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
         Worker worker = this.factory.newWorker(this.applicationProperties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleWorkflowImpl.class);
         worker.registerActivitiesImplementations(new KuFlowActivitiesDelegate(this.kuflowActivities));
-        worker.registerActivitiesImplementations(new KuFlowDetachedActivitiesDelegate(this.kuflowDetachedActivities));
         worker.registerActivitiesImplementations(new EmailActivitiesDelegate(this.emailActivities));
 
         this.factory.start();

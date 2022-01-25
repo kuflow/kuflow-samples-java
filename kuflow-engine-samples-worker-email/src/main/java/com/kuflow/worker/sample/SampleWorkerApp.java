@@ -6,8 +6,8 @@
 
 package com.kuflow.worker.sample;
 
-import com.kuflow.engine.client.activity.impl.email.config.KuFlowActivityEmailConfiguration;
-import com.kuflow.engine.client.activity.impl.task.config.KuFlowActivityTaskConfiguration;
+import com.kuflow.engine.client.activity.email.config.EmailActivitiesConfiguration;
+import com.kuflow.engine.client.activity.kuflow.config.KuFlowActivitiesConfiguration;
 import com.kuflow.worker.sample.config.property.ApplicationProperties;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,7 +25,7 @@ import org.springframework.core.env.Environment;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ ApplicationProperties.class })
-@Import({ KuFlowActivityTaskConfiguration.class, KuFlowActivityEmailConfiguration.class })
+@Import({ KuFlowActivitiesConfiguration.class, EmailActivitiesConfiguration.class })
 public class SampleWorkerApp implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SampleWorkerApp.class);
@@ -37,7 +37,7 @@ public class SampleWorkerApp implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         LOGGER.info("Running...");
     }
 

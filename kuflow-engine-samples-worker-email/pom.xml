@@ -18,7 +18,7 @@
   <dependencies>
     <dependency>
       <groupId>com.kuflow.engine.client</groupId>
-      <artifactId>kuflow-engine-client-activity-impl-task</artifactId>
+      <artifactId>kuflow-engine-client-activity-impl-kuflow</artifactId>
     </dependency>
     <dependency>
       <groupId>com.kuflow.engine.client</groupId>
