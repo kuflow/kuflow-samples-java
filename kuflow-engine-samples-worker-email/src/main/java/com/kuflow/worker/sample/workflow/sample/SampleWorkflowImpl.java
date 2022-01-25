@@ -6,29 +6,30 @@
 
 package com.kuflow.worker.sample.workflow.sample;
 
-import com.kuflow.engine.client.activity.api.email.resource.EmailResource;
-import com.kuflow.engine.client.activity.api.email.resource.SendMailRequestResource;
-import com.kuflow.engine.client.activity.api.email.service.EmailActivities;
-import com.kuflow.engine.client.activity.api.task.resource.CompleteProcessRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.CompleteProcessResponseResource;
-import com.kuflow.engine.client.activity.api.task.resource.LogRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.StartProcessRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.StartProcessResponseResource;
-import com.kuflow.engine.client.activity.api.task.resource.TaskClaimRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.TaskCompleteRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.TaskRequestResource;
-import com.kuflow.engine.client.activity.api.task.resource.TaskResponseResource;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowActivities;
-import com.kuflow.engine.client.activity.api.task.service.KuFlowDetachedActivities;
+import com.kuflow.engine.client.activity.email.EmailActivities;
+import com.kuflow.engine.client.activity.email.resource.EmailResource;
+import com.kuflow.engine.client.activity.email.resource.SendMailRequestResource;
+import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
+import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.LogRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.StartProcessRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.StartProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.TaskClaimRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.TaskCompleteRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.api.resource.ElementValueFieldResource;
 import com.kuflow.engine.client.common.api.resource.LogLevelResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.ElementUtils;
+import com.kuflow.engine.client.common.util.TemporalUtils;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 
 public class SampleWorkflowImpl implements SampleWorkflow {
@@ -44,9 +45,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         EMAIL_BODY,
     }
 
-    private final KuFlowActivities kuflowActivitiesFacade;
-
-    private final KuFlowDetachedActivities kuflowDetachedActivitiesFacade;
+    private final KuFlowActivities kuflowActivities;
 
     private final EmailActivities emailActivities;
 
@@ -67,9 +66,12 @@ public class SampleWorkflowImpl implements SampleWorkflow {
             .setScheduleToCloseTimeout(Duration.ofDays(365))
             .validateAndBuildWithDefaults();
 
-        this.kuflowActivitiesFacade = Workflow.newActivityStub(KuFlowActivities.class, defaultActivityOptions);
-
-        this.kuflowDetachedActivitiesFacade = Workflow.newActivityStub(KuFlowDetachedActivities.class, asyncActivityOptions);
+        this.kuflowActivities =
+            Workflow.newActivityStub(
+                KuFlowActivities.class,
+                defaultActivityOptions,
+                Map.of(TemporalUtils.getActivityType(KuFlowActivities.class, "createTaskAndWaitTermination"), asyncActivityOptions)
+            );
 
         this.emailActivities = Workflow.newActivityStub(EmailActivities.class, defaultActivityOptions);
     }
@@ -98,21 +100,21 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         StartProcessRequestResource request = new StartProcessRequestResource();
         request.setProcessId(processId);
 
-        return this.kuflowActivitiesFacade.startProcess(request);
+        return this.kuflowActivities.startProcess(request);
     }
 
     private CompleteProcessResponseResource completeProcess(UUID processId) {
         CompleteProcessRequestResource request = new CompleteProcessRequestResource();
         request.setProcessId(processId);
 
-        return this.kuflowActivitiesFacade.completeProcess(request);
+        return this.kuflowActivities.completeProcess(request);
     }
 
     /**
      * Create a human task in KuFlow in order to collect the necessary information to send an email.
      *
-     * @param startProcess
-     * @return
+     * @param startProcess response of start process activity
+     * @return task created
      */
     private TaskResponseResource createHumanTaskFillInfo(StartProcessResponseResource startProcess) {
         TaskRequestResource task = new TaskRequestResource();
@@ -121,7 +123,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         task.setTaskId(Workflow.randomUUID());
 
         // Create Human Task in KuFlow
-        return this.kuflowDetachedActivitiesFacade.createDetachedTask(task);
+        return this.kuflowActivities.createTaskAndWaitTermination(task);
     }
 
     /**
@@ -134,7 +136,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      *
      * @param startProcess response of start process activity
      * @param infoTask kuflow task with the data to send in the email
-     * @return
+     * @return task created
      */
     private TaskResponseResource createAutomaticTaskSendEmail(StartProcessResponseResource startProcess, TaskResponseResource infoTask) {
         TaskRequestResource task = new TaskRequestResource();
@@ -143,12 +145,12 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         task.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
         // Create Automatic Task in KuFlow
-        TaskResponseResource taskResponse = this.kuflowActivitiesFacade.createTask(task);
+        TaskResponseResource taskResponse = this.kuflowActivities.createTask(task);
 
         // Claim Automatic Task: Our worker will be responsible for its completion.
         TaskClaimRequestResource taskClaimrequestResource = new TaskClaimRequestResource();
         taskClaimrequestResource.setTaskId(taskResponse.getTask().getId());
-        this.kuflowActivitiesFacade.claimTask(taskClaimrequestResource);
+        this.kuflowActivities.claimTask(taskClaimrequestResource);
 
         // Get the recipient email from info task
         ElementValueFieldResource emailElementValue = ElementUtils.getSingleValueByCode(
@@ -187,7 +189,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         // Activity Complete
         TaskCompleteRequestResource completeRequest = new TaskCompleteRequestResource();
         completeRequest.setTaskId(taskResponse.getTask().getId());
-        this.kuflowActivitiesFacade.completeTask(completeRequest);
+        this.kuflowActivities.completeTask(completeRequest);
 
         return taskResponse;
     }
@@ -199,6 +201,6 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         request.setLevel(LogLevelResource.INFO);
         request.setMessage(message);
 
-        this.kuflowActivitiesFacade.appendLog(request);
+        this.kuflowActivities.appendLog(request);
     }
 }
