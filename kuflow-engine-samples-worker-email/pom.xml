@@ -13,7 +13,7 @@
   <artifactId>kuflow-engine-samples-worker-email</artifactId>
   <packaging>jar</packaging>
 
-  <name>KuFlow :: Engine :: :: Samples :: Worker :: Email</name>
+  <name>KuFlow Engine Samples :: Worker :: Email</name>
 
   <dependencies>
     <dependency>
