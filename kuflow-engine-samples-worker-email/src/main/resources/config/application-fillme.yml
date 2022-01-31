@@ -6,12 +6,6 @@ kuflow:
   activity:
     kuflow:
 
-      # NOTE that the endpoint is the KUFLOW LIVE environment for
-      # the KUFLOW REST API.
-      # If you desire to use other environment, like KUFLOW Sanbdox
-      # please configure the property.
-      endpoint: https://api.kuflow.com/v1
-
       # ID of the APPLICATION configured in KUFLOW.
       # Get it in "Aplication details" in the Kuflow APP.
       application-id: FILL_ME
@@ -22,12 +16,6 @@ kuflow:
 
 application:
   temporal:
-
-    # NOTE that the endpoint is the KUFLOW LIVE environment for
-    # the KUFLOW GRPC TEMPORAL API.
-    # If you desire to use other environment, like KUFLOW SANBDOX
-    # please configure the property
-    target: engine.kuflow.com:443
 
     # Temporal Namespace. Get it in "Aplication details" in the KUFLOW APP.
     namespace: FILL_ME
