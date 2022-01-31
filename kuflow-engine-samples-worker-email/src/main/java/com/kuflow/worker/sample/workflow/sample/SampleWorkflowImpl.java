@@ -80,7 +80,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource request) {
         StartProcessResponseResource startProcess = this.startProcess(request.getProcessId());
 
-        TaskResponseResource taskFillInfo = this.createHumanTaskFillInfo(startProcess);
+        TaskResponseResource taskFillInfo = this.createTaskFillInfo(startProcess);
 
         this.createAutomaticTaskSendEmail(startProcess, taskFillInfo);
 
@@ -111,25 +111,25 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     }
 
     /**
-     * Create a human task in KuFlow in order to collect the necessary information to send an email.
+     * Create a task in KuFlow in order to collect the necessary information to send an email.
      *
      * @param startProcess response of start process activity
      * @return task created
      */
-    private TaskResponseResource createHumanTaskFillInfo(StartProcessResponseResource startProcess) {
+    private TaskResponseResource createTaskFillInfo(StartProcessResponseResource startProcess) {
         TaskRequestResource task = new TaskRequestResource();
         task.setProcessId(startProcess.getProcess().getId());
         task.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
         task.setTaskId(Workflow.randomUUID());
 
-        // Create Human Task in KuFlow
+        // Create Task in KuFlow
         return this.kuflowActivities.createTaskAndWaitTermination(task);
     }
 
     /**
      * Execute a Temporal activity that sends an email obtaining the data from a previous KuFlow task.
      *
-     * To see the activity process reflected in the KuFlow application, we created an automatic task.
+     * To see the activity process reflected in the KuFlow application, we created a task.
      * The execution of Temporal activities does not have to have direct correspondence with KuFlow tasks. Its use
      * depends on your Workflow logic. In the same way, several activities could be executed and have a single
      * automatic task in Kuflow that encompasses them. As always, it all depends on the requirements of your workflow.

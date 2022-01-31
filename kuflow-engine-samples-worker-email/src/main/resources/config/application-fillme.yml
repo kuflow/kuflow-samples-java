@@ -35,39 +35,6 @@ application:
     kuflow-queue: FILL_ME
 
     mutual-tls:
-      # KUFLOW Certification Authority (CA) of the certificates issued in KUFLOW
-      ca-data: |
-        -----BEGIN CERTIFICATE-----
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        -----END CERTIFICATE-----
 
       # Client certificate
       # Get it in "Application details" in the KUFLOW APP.
@@ -106,6 +73,40 @@ application:
       #            when you generate the certificates in the KUFLOW App
       key-data: |
         -----BEGIN CERTIFICATE-----
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        -----END CERTIFICATE-----
+
+      # KUFLOW Certification Authority (CA) of the certificates issued in KUFLOW
+      ca-data: |
+        -----BEGIN CERTIFICATE-----
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
