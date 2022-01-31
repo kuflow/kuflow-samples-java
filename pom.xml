@@ -46,7 +46,7 @@
     <spring-cloud.version>2021.0.0</spring-cloud.version>
 
     <!-- Application dependencies -->
-    <kuflow-engine-client.version>0.0.4-SNAPSHOT</kuflow-engine-client.version>
+    <kuflow-engine-client.version>0.0.4</kuflow-engine-client.version>
   </properties>
 
   <dependencyManagement>
