@@ -13,12 +13,12 @@
   <artifactId>kuflow-engine-samples-worker-email</artifactId>
   <packaging>jar</packaging>
 
-  <name>KuFlow :: Engine :: :: Samples :: Worker :: Email</name>
+  <name>KuFlow Engine Samples :: Worker :: Email</name>
 
   <dependencies>
     <dependency>
       <groupId>com.kuflow.engine.client</groupId>
-      <artifactId>kuflow-engine-client-activity-impl-task</artifactId>
+      <artifactId>kuflow-engine-client-activity-impl-kuflow</artifactId>
     </dependency>
     <dependency>
       <groupId>com.kuflow.engine.client</groupId>
