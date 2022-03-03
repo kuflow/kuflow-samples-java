@@ -24,6 +24,10 @@
       <groupId>com.kuflow.engine.client</groupId>
       <artifactId>kuflow-engine-client-activity-impl-email</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

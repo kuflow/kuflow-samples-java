@@ -6,10 +6,10 @@
 
 package com.kuflow.worker.sample.config;
 
-import com.kuflow.engine.client.common.api.controller.AuthenticationApi;
 import com.kuflow.engine.client.common.authorization.KuFlowAuthorizationTokenSupplier;
-import com.kuflow.engine.client.common.error.SystemException;
+import com.kuflow.engine.client.common.error.KuFlowEngineClientException;
 import com.kuflow.engine.client.common.tracing.MDCContextPropagator;
+import com.kuflow.rest.client.controller.AuthenticationApi;
 import com.kuflow.worker.sample.config.property.ApplicationProperties;
 import com.kuflow.worker.sample.config.property.ApplicationProperties.TemporalProperties.MutualTlsProperties;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
@@ -98,14 +98,14 @@ public class TemporalConfiguration {
             StringUtils.isNotBlank(mutualTls.getCert()) &&
             (StringUtils.isBlank(mutualTls.getKey()) || StringUtils.isBlank(mutualTls.getCa()))
         ) {
-            throw new SystemException("key and ca are required");
+            throw new KuFlowEngineClientException("key and ca are required");
         }
 
         if (
             StringUtils.isNotBlank(mutualTls.getCertData()) &&
             (StringUtils.isBlank(mutualTls.getKeyData()) || StringUtils.isBlank(mutualTls.getCaData()))
         ) {
-            throw new SystemException("keyData or caData are required");
+            throw new KuFlowEngineClientException("keyData or caData are required");
         }
 
         try (
@@ -124,7 +124,7 @@ public class TemporalConfiguration {
 
             return SimpleSslContextBuilder.forPKCS8(certInputStream, keyInputStream).setTrustManager(trustManager).build();
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-            throw new SystemException("Unable to configure mTLS", e);
+            throw new KuFlowEngineClientException("Unable to configure mTLS", e);
         }
     }
 
@@ -140,7 +140,7 @@ public class TemporalConfiguration {
         try {
             return new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            throw new SystemException(String.format("Unable to load %s", file));
+            throw new KuFlowEngineClientException(String.format("Unable to load %s", file));
         }
     }
 

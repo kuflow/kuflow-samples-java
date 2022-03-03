@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.6.2</version>
+    <version>2.6.4</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -41,12 +41,11 @@
     <prettier-java.version>1.6.1</prettier-java.version>
 
     <!-- Spring dependencies -->
-    <spring-boot.version>2.6.2</spring-boot.version>
-    <!-- Spring Cloud for Boot Version 2.4.x, 2.5.x -->
-    <spring-cloud.version>2021.0.0</spring-cloud.version>
+    <spring-boot.version>2.6.4</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow-engine-client.version>0.0.4</kuflow-engine-client.version>
+    <kuflow-engine-client.version>0.7.0</kuflow-engine-client.version>
+    <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 
   <dependencyManagement>
@@ -60,6 +59,11 @@
         <groupId>com.kuflow.engine.client</groupId>
         <artifactId>kuflow-engine-client-activity-impl-email</artifactId>
         <version>${kuflow-engine-client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
