@@ -19,12 +19,12 @@ import com.kuflow.engine.client.activity.kuflow.resource.TaskClaimRequestResourc
 import com.kuflow.engine.client.activity.kuflow.resource.TaskCompleteRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
-import com.kuflow.engine.client.common.api.resource.ElementValueFieldResource;
-import com.kuflow.engine.client.common.api.resource.LogLevelResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
-import com.kuflow.engine.client.common.util.ElementUtils;
 import com.kuflow.engine.client.common.util.TemporalUtils;
+import com.kuflow.rest.client.resource.ElementValueFieldResource;
+import com.kuflow.rest.client.resource.LogLevelResource;
+import com.kuflow.rest.client.util.ElementUtils;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
