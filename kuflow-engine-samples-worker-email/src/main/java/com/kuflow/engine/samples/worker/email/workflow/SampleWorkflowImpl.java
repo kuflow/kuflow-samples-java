@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-package com.kuflow.worker.sample.workflow.sample;
+package com.kuflow.engine.samples.worker.email.workflow;
 
 import com.kuflow.engine.client.activity.email.EmailActivities;
 import com.kuflow.engine.client.activity.email.resource.EmailResource;

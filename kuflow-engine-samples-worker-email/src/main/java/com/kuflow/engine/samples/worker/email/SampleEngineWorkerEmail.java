@@ -4,11 +4,11 @@
  * All rights reserved.
  */
 
-package com.kuflow.worker.sample;
+package com.kuflow.engine.samples.worker.email;
 
 import com.kuflow.engine.client.activity.email.config.EmailActivitiesConfiguration;
 import com.kuflow.engine.client.activity.kuflow.config.KuFlowActivitiesConfiguration;
-import com.kuflow.worker.sample.config.property.ApplicationProperties;
+import com.kuflow.engine.samples.worker.email.config.property.ApplicationProperties;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
@@ -26,12 +26,12 @@ import org.springframework.core.env.Environment;
 @SpringBootApplication
 @EnableConfigurationProperties({ ApplicationProperties.class })
 @Import({ KuFlowActivitiesConfiguration.class, EmailActivitiesConfiguration.class })
-public class SampleWorkerApp implements CommandLineRunner {
+public class SampleEngineWorkerEmail implements CommandLineRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SampleWorkerApp.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SampleEngineWorkerEmail.class);
 
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(SampleWorkerApp.class);
+        SpringApplication app = new SpringApplication(SampleEngineWorkerEmail.class);
         Environment env = app.run(args).getEnvironment();
         logApplicationStartup(env);
     }
@@ -59,12 +59,14 @@ public class SampleWorkerApp implements CommandLineRunner {
         String[] profiles = ArrayUtils.isNotEmpty(env.getActiveProfiles()) ? env.getActiveProfiles() : env.getDefaultProfiles();
 
         LOGGER.info(
-            "\n----------------------------------------------------------" +
-            "\n\tApplication '{}' is running! Access URLs:" +
-            "\n\tLocal: \t\t{}://localhost:{}{}" +
-            "\n\tExternal: \t{}://{}:{}{}" +
-            "\n\tProfile(s): \t{}" +
-            "\n----------------------------------------------------------",
+            """
+            ----------------------------------------------------------
+            \tApplication '{}' is running! Access URLs:
+            \tLocal: \t\t{}://localhost:{}{}
+            \tExternal: \t{}://{}:{}{}
+            \tProfile(s): \t{}
+            ----------------------------------------------------------
+            """,
             env.getProperty("spring.application.name"),
             protocol,
             serverPort,

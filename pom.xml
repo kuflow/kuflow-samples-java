@@ -20,11 +20,12 @@
 
   <modules>
     <module>kuflow-engine-samples-worker-email</module>
+    <module>kuflow-engine-samples-worker-loan</module>
   </modules>
 
   <properties>
     <maven.version>3.8.1</maven.version>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
     <resource.delimiter>#</resource.delimiter>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -44,7 +45,7 @@
     <spring-boot.version>2.6.4</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow-engine-client.version>0.8.0</kuflow-engine-client.version>
+    <kuflow-engine-client.version>0.10.0-SNAPSHOT</kuflow-engine-client.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 

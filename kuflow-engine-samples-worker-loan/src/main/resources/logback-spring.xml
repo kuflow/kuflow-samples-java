@@ -5,7 +5,7 @@
   ~ All rights reserved.
   -->
 <configuration scan="true">
-  <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/kuflow-engine-samples-worker-email.log}"/>
+  <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/kuflow-engine-samples-worker-loan.log}"/>
 
   <include resource="org/springframework/boot/logging/logback/base.xml" />
 

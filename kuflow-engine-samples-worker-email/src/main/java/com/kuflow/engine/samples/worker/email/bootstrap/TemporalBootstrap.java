@@ -4,14 +4,14 @@
  * All rights reserved.
  */
 
-package com.kuflow.worker.sample.bootstrap;
+package com.kuflow.engine.samples.worker.email.bootstrap;
 
 import com.kuflow.engine.client.activity.email.EmailActivities;
 import com.kuflow.engine.client.activity.email.EmailActivitiesDelegate;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivitiesDelegate;
-import com.kuflow.worker.sample.config.property.ApplicationProperties;
-import com.kuflow.worker.sample.workflow.sample.SampleWorkflowImpl;
+import com.kuflow.engine.samples.worker.email.config.property.ApplicationProperties;
+import com.kuflow.engine.samples.worker.email.workflow.SampleWorkflowImpl;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
 import java.util.concurrent.TimeUnit;
