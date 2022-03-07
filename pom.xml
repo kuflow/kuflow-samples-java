@@ -44,7 +44,7 @@
     <spring-boot.version>2.6.4</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow-engine-client.version>0.7.0</kuflow-engine-client.version>
+    <kuflow-engine-client.version>0.8.0</kuflow-engine-client.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 
