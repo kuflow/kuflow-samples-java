@@ -10,6 +10,8 @@ import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.StartProcessRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.StartProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.TaskAssignRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
@@ -19,6 +21,7 @@ import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActiviti
 import com.kuflow.rest.client.resource.ElementDefinitionTypeResource;
 import com.kuflow.rest.client.resource.ElementValueDecisionResource;
 import com.kuflow.rest.client.resource.ElementValueFieldResource;
+import com.kuflow.rest.client.resource.ProcessResource;
 import com.kuflow.rest.client.resource.TaskResource;
 import com.kuflow.rest.client.util.ElementUtils;
 import io.temporal.activity.ActivityOptions;
@@ -77,7 +80,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
         LOGGER.info("Started loan process {}", workflowRequest.getProcessId());
 
-        this.startProcess(workflowRequest.getProcessId());
+        ProcessResource process = this.startProcess(workflowRequest.getProcessId());
 
         TaskResource taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
         ElementValueDecisionResource currencyField = this.retrieveElementDecision(taskLoanApplication, "currency");
@@ -85,18 +88,21 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
 
-        if (amountEUR.compareTo(BigDecimal.valueOf(5000)) > 0) {
+        TaskResource taskNotification;
+        if (amountEUR.compareTo(BigDecimal.valueOf(5_000)) > 0) {
             TaskResource taskApproveLoan = this.createTaskApproveLoan(taskLoanApplication, amountEUR);
             ElementValueDecisionResource authorizedField = this.retrieveElementDecision(taskApproveLoan, "authorized");
 
             if (authorizedField.getCode().equals("OK")) {
-                this.createTaskNotificationGranted(workflowRequest);
+                taskNotification = this.createTaskNotificationGranted(workflowRequest);
             } else {
-                this.createTaskNotificationRejection(workflowRequest);
+                taskNotification = this.createTaskNotificationRejection(workflowRequest);
             }
         } else {
-            this.createTaskNotificationGranted(workflowRequest);
+            taskNotification = this.createTaskNotificationGranted(workflowRequest);
         }
+
+        this.assignTaskToProcessInitiator(taskNotification, process);
 
         CompleteProcessResponseResource completeProcess = this.completeProcess(workflowRequest.getProcessId());
 
@@ -112,11 +118,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return workflowResponse;
     }
 
-    private void startProcess(UUID processId) {
+    private ProcessResource startProcess(UUID processId) {
         StartProcessRequestResource request = new StartProcessRequestResource();
         request.setProcessId(processId);
 
-        this.kuflowActivities.startProcess(request);
+        StartProcessResponseResource response = this.kuflowActivities.startProcess(request);
+
+        return response.getProcess();
     }
 
     private CompleteProcessResponseResource completeProcess(UUID processId) {
@@ -180,28 +188,42 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * Create a notification task showing that the loan was granted.
      *
      * @param workflowRequest workflow request
+     * @return task created
      */
-    private void createTaskNotificationGranted(WorkflowRequestResource workflowRequest) {
+    private TaskResource createTaskNotificationGranted(WorkflowRequestResource workflowRequest) {
         TaskRequestResource request = new TaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_GRANTED);
 
-        this.kuflowActivities.createTask(request);
+        TaskResponseResource response = this.kuflowActivities.createTask(request);
+
+        return response.getTask();
     }
 
     /**
      * Create a notification task showing that the loan was rejected.
      *
      * @param workflowRequest workflow request
+     * @return task created
      */
-    private void createTaskNotificationRejection(WorkflowRequestResource workflowRequest) {
+    private TaskResource createTaskNotificationRejection(WorkflowRequestResource workflowRequest) {
         TaskRequestResource request = new TaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_REJECTION);
 
-        this.kuflowActivities.createTask(request);
+        TaskResponseResource response = this.kuflowActivities.createTask(request);
+
+        return response.getTask();
+    }
+
+    private void assignTaskToProcessInitiator(TaskResource taskNotification, ProcessResource process) {
+        TaskAssignRequestResource request = new TaskAssignRequestResource();
+        request.setTaskId(taskNotification.getId());
+        request.setPrincipalId(process.getInitiator().getId());
+
+        this.kuflowActivities.assignTask(request);
     }
 
     private BigDecimal convertToEuros(ElementValueDecisionResource currencyField, ElementValueFieldResource amountField) {
