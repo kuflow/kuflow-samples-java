@@ -4,7 +4,7 @@ This doc is intended for contributors to `kuflow-engine-samples-java`
 
 ## Development Environment
 
-* Java 11
+* Java 17
 
 ## Test and Build
 

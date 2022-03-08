@@ -4,14 +4,13 @@
  * All rights reserved.
  */
 
-package com.kuflow.worker.sample.config;
+package com.kuflow.engine.samples.worker.loan;
 
 import com.kuflow.engine.client.common.authorization.KuFlowAuthorizationTokenSupplier;
 import com.kuflow.engine.client.common.error.KuFlowEngineClientException;
 import com.kuflow.engine.client.common.tracing.MDCContextPropagator;
+import com.kuflow.engine.samples.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.rest.client.controller.AuthenticationApi;
-import com.kuflow.worker.sample.config.property.ApplicationProperties;
-import com.kuflow.worker.sample.config.property.ApplicationProperties.TemporalProperties.MutualTlsProperties;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
 import io.temporal.client.ActivityCompletionClient;
@@ -44,19 +43,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class TemporalConfiguration {
 
-    private final ApplicationProperties applicationProperties;
+    private final SampleEngineWorkerLoanProperties sampleEngineWorkerLoanProperties;
 
     private final AuthenticationApi authenticationApi;
 
-    public TemporalConfiguration(ApplicationProperties applicationProperties, AuthenticationApi authenticationApi) {
-        this.applicationProperties = applicationProperties;
+    public TemporalConfiguration(SampleEngineWorkerLoanProperties SampleEngineWorkerLoanProperties, AuthenticationApi authenticationApi) {
+        this.sampleEngineWorkerLoanProperties = SampleEngineWorkerLoanProperties;
         this.authenticationApi = authenticationApi;
     }
 
     @Bean(destroyMethod = "shutdown")
     public WorkflowServiceStubs workflowServiceStubs() {
         Builder builder = WorkflowServiceStubsOptions.newBuilder();
-        builder.setTarget(this.applicationProperties.getTemporal().getTarget());
+        builder.setTarget(this.sampleEngineWorkerLoanProperties.getTemporal().getTarget());
         builder.setSslContext(this.createSslContext());
         builder.addGrpcMetadataProvider(
             new AuthorizationGrpcMetadataProvider(new KuFlowAuthorizationTokenSupplier(this.authenticationApi))
@@ -71,7 +70,7 @@ public class TemporalConfiguration {
     public WorkflowClient workflowClient(WorkflowServiceStubs service) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
-            .setNamespace(this.applicationProperties.getTemporal().getNamespace())
+            .setNamespace(this.sampleEngineWorkerLoanProperties.getTemporal().getNamespace())
             .setContextPropagators(Collections.singletonList(new MDCContextPropagator()))
             .build();
 
@@ -89,7 +88,7 @@ public class TemporalConfiguration {
     }
 
     private SslContext createSslContext() {
-        MutualTlsProperties mutualTls = this.applicationProperties.getTemporal().getMutualTls();
+        MutualTlsProperties mutualTls = this.sampleEngineWorkerLoanProperties.getTemporal().getMutualTls();
         if (StringUtils.isBlank(mutualTls.getCert()) && StringUtils.isBlank(mutualTls.getCertData())) {
             return null;
         }

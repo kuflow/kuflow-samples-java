@@ -10,28 +10,34 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>kuflow-engine-samples-worker-email</artifactId>
+  <artifactId>kuflow-engine-samples-worker-loan</artifactId>
   <packaging>jar</packaging>
 
-  <name>KuFlow Engine Samples :: Worker :: Email</name>
+  <name>KuFlow Engine Samples :: Worker :: loan</name>
 
   <dependencies>
     <dependency>
-      <groupId>com.kuflow.engine.client</groupId>
-      <artifactId>kuflow-engine-client-activity-impl-kuflow</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
       <groupId>com.kuflow.engine.client</groupId>
-      <artifactId>kuflow-engine-client-activity-impl-email</artifactId>
+      <artifactId>kuflow-engine-client-activity-impl-kuflow</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
 
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
       <optional>true</optional>
     </dependency>
   </dependencies>

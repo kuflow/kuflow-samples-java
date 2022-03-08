@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-package com.kuflow.worker.sample.config.property;
+package com.kuflow.engine.samples.worker.email.config.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
