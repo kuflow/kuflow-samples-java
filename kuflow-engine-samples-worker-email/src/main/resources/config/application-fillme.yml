@@ -68,7 +68,7 @@ application:
       # IMPORTANT: This example works with PKCS8, so ensure PKCS8 is selected
       #            when you generate the certificates in the KUFLOW App
       key-data: |
-        -----BEGIN CERTIFICATE-----
+        -----BEGIN PRIVATE KEY-----
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
@@ -94,7 +94,7 @@ application:
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        -----END CERTIFICATE-----
+        -----END PRIVATE KEY-----
 
       # KUFLOW Certification Authority (CA) of the certificates issued in KUFLOW
       ca-data: |
