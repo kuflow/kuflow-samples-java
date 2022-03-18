@@ -19,12 +19,11 @@ spring:
     web-application-type: none
 
 kuflow:
-  activity:
-    kuflow:
+  api:
 
-      # NOTE that the endpoint is the KUFLOW LIVE environment for
-      # the KUFLOW REST API.
-      endpoint: https://api.kuflow.com/v1
+    # NOTE that the endpoint is the KUFLOW LIVE environment for
+    # the KUFLOW REST API.
+    endpoint: https://api.kuflow.com/v1
 
 application:
   temporal:
