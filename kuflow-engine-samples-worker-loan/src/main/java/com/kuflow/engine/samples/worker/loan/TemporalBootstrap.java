@@ -7,9 +7,7 @@
 package com.kuflow.engine.samples.worker.loan;
 
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
-import com.kuflow.engine.client.activity.kuflow.KuFlowActivitiesDelegate;
 import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActivitiesDelegate;
 import com.kuflow.engine.samples.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
@@ -61,8 +59,8 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private void startWorkers() {
         Worker worker = this.factory.newWorker(this.sampleEngineWorkerLoanProperties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class);
-        worker.registerActivitiesImplementations(new KuFlowActivitiesDelegate(this.kuflowActivities));
-        worker.registerActivitiesImplementations(new CurrencyConversionActivitiesDelegate(this.currencyConversionActivities));
+        worker.registerActivitiesImplementations(this.kuflowActivities);
+        worker.registerActivitiesImplementations(this.currencyConversionActivities);
 
         this.factory.start();
     }

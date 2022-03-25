@@ -18,12 +18,9 @@ import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
 import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.rest.client.resource.ElementDefinitionTypeResource;
-import com.kuflow.rest.client.resource.ElementValueDecisionResource;
-import com.kuflow.rest.client.resource.ElementValueFieldResource;
+import com.kuflow.rest.client.resource.ElementValueWrapperResource;
 import com.kuflow.rest.client.resource.ProcessResource;
 import com.kuflow.rest.client.resource.TaskResource;
-import com.kuflow.rest.client.util.ElementUtils;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
@@ -83,17 +80,19 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         ProcessResource process = this.startProcess(workflowRequest.getProcessId());
 
         TaskResource taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
-        ElementValueDecisionResource currencyField = this.retrieveElementDecision(taskLoanApplication, "currency");
-        ElementValueFieldResource amountField = this.retrieveElementValue(taskLoanApplication, "amount");
 
-        BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
+        String currency = taskLoanApplication.getElementValues().get("currency").getValueAsString();
+        String amount = taskLoanApplication.getElementValues().get("amount").getValueAsString();
+
+        BigDecimal amountEUR = this.convertToEuros(currency, amount);
 
         TaskResource taskNotification;
         if (amountEUR.compareTo(BigDecimal.valueOf(5_000)) > 0) {
             TaskResource taskApproveLoan = this.createTaskApproveLoan(taskLoanApplication, amountEUR);
-            ElementValueDecisionResource authorizedField = this.retrieveElementDecision(taskApproveLoan, "authorized");
 
-            if (authorizedField.getCode().equals("OK")) {
+            String authorized = taskApproveLoan.getElementValues().get("authorized").getValueAsString();
+
+            if (authorized.equals("OK")) {
                 taskNotification = this.createTaskNotificationGranted(workflowRequest);
             } else {
                 taskNotification = this.createTaskNotificationRejection(workflowRequest);
@@ -159,25 +158,15 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskApproveLoan(TaskResource taskLoanApplication, BigDecimal amountEUR) {
-        ElementValueFieldResource firstNameField = this.retrieveElementValue(taskLoanApplication, "firstName");
-        ElementValueFieldResource lastNameField = this.retrieveElementValue(taskLoanApplication, "lastName");
-
-        ElementValueFieldResource nameField = new ElementValueFieldResource();
-        nameField.setElementDefinitionType(ElementDefinitionTypeResource.FIELD);
-        nameField.setElementDefinitionCode("name");
-        nameField.setValue(firstNameField.getValue() + " " + lastNameField.getValue());
-
-        ElementValueFieldResource amountRequestedField = new ElementValueFieldResource();
-        amountRequestedField.setElementDefinitionType(ElementDefinitionTypeResource.FIELD);
-        amountRequestedField.setElementDefinitionCode("amountRequested");
-        amountRequestedField.setValue(amountEUR.toPlainString());
+        String firstName = taskLoanApplication.getElementValues().get("firstName").getValueAsString();
+        String lastName = taskLoanApplication.getElementValues().get("lastName").getValueAsString();
 
         TaskRequestResource request = new TaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(taskLoanApplication.getProcessId());
         request.setTaskDefinitionCode(TASK_APPROVE_LOAN);
-        request.addElementValue(nameField);
-        request.addElementValue(amountRequestedField);
+        request.putElementValue("name", ElementValueWrapperResource.of(firstName + " " + lastName));
+        request.putElementValue("amountRequested", ElementValueWrapperResource.of(amountEUR.toPlainString()));
 
         TaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
 
@@ -226,21 +215,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         this.kuflowActivities.assignTask(request);
     }
 
-    private BigDecimal convertToEuros(ElementValueDecisionResource currencyField, ElementValueFieldResource amountField) {
-        BigDecimal amount = new BigDecimal(amountField.getValue() != null ? amountField.getValue() : "0");
-        if (currencyField.getCode().equals("EUR")) {
-            return amount;
+    private BigDecimal convertToEuros(String currency, String amount) {
+        BigDecimal amountEUR = new BigDecimal(amount != null ? amount : "0");
+        if (currency.equals("EUR")) {
+            return amountEUR;
         } else {
-            String amountText = this.currencyConversionActivities.convert(amount.toPlainString(), currencyField.getCode(), "EUR");
+            String amountText = this.currencyConversionActivities.convert(amountEUR.toPlainString(), currency, "EUR");
             return new BigDecimal(amountText);
         }
-    }
-
-    private ElementValueDecisionResource retrieveElementDecision(TaskResource taskLoanApplication, String code) {
-        return ElementUtils.getSingleValueByCode(taskLoanApplication, code, ElementValueDecisionResource.class);
-    }
-
-    private ElementValueFieldResource retrieveElementValue(TaskResource taskLoanApplication, String code) {
-        return ElementUtils.getSingleValueByCode(taskLoanApplication, code, ElementValueFieldResource.class);
     }
 }

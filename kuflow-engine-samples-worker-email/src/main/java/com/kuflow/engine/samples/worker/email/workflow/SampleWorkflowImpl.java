@@ -22,9 +22,8 @@ import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
-import com.kuflow.rest.client.resource.ElementValueFieldResource;
+import com.kuflow.rest.client.resource.ElementValueWrapperResource;
 import com.kuflow.rest.client.resource.LogLevelResource;
-import com.kuflow.rest.client.util.ElementUtils;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
@@ -152,31 +151,14 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         taskClaimrequestResource.setTaskId(taskResponse.getTask().getId());
         this.kuflowActivities.claimTask(taskClaimrequestResource);
 
-        // Get the recipient email from info task
-        ElementValueFieldResource emailElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_RECIPIENT.name(),
-            ElementValueFieldResource.class
-        );
-
-        // Get the email body from info task
-        ElementValueFieldResource subjectElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_SUBJECT.name(),
-            ElementValueFieldResource.class
-        );
-
-        ElementValueFieldResource bodyElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_BODY.name(),
-            ElementValueFieldResource.class
-        );
+        // Get values from Info Task
+        Map<String, ElementValueWrapperResource> infoTaskElementValues = infoTask.getTask().getElementValues();
 
         EmailResource email = new EmailResource();
         email.setTemplate("email");
-        email.setTo(emailElementValue.getValue());
-        email.addVariables("subject", subjectElementValue.getValue());
-        email.addVariables("body", bodyElementValue.getValue());
+        email.setTo(infoTaskElementValues.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).getValueAsString());
+        email.addVariables("subject", infoTaskElementValues.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).getValueAsString());
+        email.addVariables("body", infoTaskElementValues.get(ElementDefinitionCode.EMAIL_BODY.name()).getValueAsString());
 
         // Send a mail
         SendMailRequestResource request = new SendMailRequestResource();
