@@ -9,17 +9,17 @@ package com.kuflow.engine.samples.worker.loan.workflow;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponseResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskAssignRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
 import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.rest.client.resource.ElementValueWrapperResource;
 import com.kuflow.rest.client.resource.ProcessResource;
+import com.kuflow.rest.client.resource.TaskElementValueWrapperResource;
 import com.kuflow.rest.client.resource.TaskResource;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
@@ -27,7 +27,6 @@ import io.temporal.workflow.Workflow;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import org.slf4j.Logger;
 
 public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoanWorkflow {
@@ -77,8 +76,6 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
         LOGGER.info("Started loan process {}", workflowRequest.getProcessId());
 
-        ProcessResource process = this.startProcess(workflowRequest.getProcessId());
-
         TaskResource taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
 
         String currency = taskLoanApplication.getElementValues().get("currency").getValueAsString();
@@ -101,13 +98,24 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
             taskNotification = this.createTaskNotificationGranted(workflowRequest);
         }
 
+        ProcessResource process = this.retrieveProcess(workflowRequest);
+
         this.assignTaskToProcessInitiator(taskNotification, process);
 
-        CompleteProcessResponseResource completeProcess = this.completeProcess(workflowRequest.getProcessId());
+        CompleteProcessResponseResource completeProcess = this.completeProcess(workflowRequest);
 
         LOGGER.info("Finished loan process {}", workflowRequest.getProcessId());
 
         return this.completeWorkflow(completeProcess);
+    }
+
+    private ProcessResource retrieveProcess(WorkflowRequestResource workflowRequest) {
+        RetrieveProcessRequestResource request = new RetrieveProcessRequestResource();
+        request.setProcessId(workflowRequest.getProcessId());
+
+        RetrieveProcessResponseResource response = this.kuflowActivities.retrieveProcess(request);
+
+        return response.getProcess();
     }
 
     private WorkflowResponseResource completeWorkflow(CompleteProcessResponseResource completeProcess) {
@@ -117,18 +125,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return workflowResponse;
     }
 
-    private ProcessResource startProcess(UUID processId) {
-        StartProcessRequestResource request = new StartProcessRequestResource();
-        request.setProcessId(processId);
-
-        StartProcessResponseResource response = this.kuflowActivities.startProcess(request);
-
-        return response.getProcess();
-    }
-
-    private CompleteProcessResponseResource completeProcess(UUID processId) {
+    private CompleteProcessResponseResource completeProcess(WorkflowRequestResource workflowRequest) {
         CompleteProcessRequestResource request = new CompleteProcessRequestResource();
-        request.setProcessId(processId);
+        request.setProcessId(workflowRequest.getProcessId());
 
         return this.kuflowActivities.completeProcess(request);
     }
@@ -140,12 +139,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskLoanApplication(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_LOAN_APPLICATION);
 
-        TaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
 
         return response.getTask();
     }
@@ -161,14 +160,14 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         String firstName = taskLoanApplication.getElementValues().get("firstName").getValueAsString();
         String lastName = taskLoanApplication.getElementValues().get("lastName").getValueAsString();
 
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(taskLoanApplication.getProcessId());
         request.setTaskDefinitionCode(TASK_APPROVE_LOAN);
-        request.putElementValue("name", ElementValueWrapperResource.of(firstName + " " + lastName));
-        request.putElementValue("amountRequested", ElementValueWrapperResource.of(amountEUR.toPlainString()));
+        request.putElementValuesItem("name", TaskElementValueWrapperResource.of(firstName + " " + lastName));
+        request.putElementValuesItem("amountRequested", TaskElementValueWrapperResource.of(amountEUR.toPlainString()));
 
-        TaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
 
         return response.getTask();
     }
@@ -180,12 +179,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskNotificationGranted(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_GRANTED);
 
-        TaskResponseResource response = this.kuflowActivities.createTask(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTask(request);
 
         return response.getTask();
     }
@@ -197,12 +196,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskNotificationRejection(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_REJECTION);
 
-        TaskResponseResource response = this.kuflowActivities.createTask(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTask(request);
 
         return response.getTask();
     }
