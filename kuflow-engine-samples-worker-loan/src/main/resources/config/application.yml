@@ -23,7 +23,7 @@ kuflow:
 
     # NOTE that the endpoint is the KUFLOW LIVE environment for
     # the KUFLOW REST API.
-    endpoint: https://api.kuflow.com/v1
+    endpoint: https://api.kuflow.com/v1.0
 
 application:
   temporal:
