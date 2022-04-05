@@ -9,28 +9,24 @@ package com.kuflow.engine.samples.worker.loan.workflow;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponseResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskAssignRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
 import com.kuflow.engine.samples.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.rest.client.resource.ElementDefinitionTypeResource;
-import com.kuflow.rest.client.resource.ElementValueDecisionResource;
-import com.kuflow.rest.client.resource.ElementValueFieldResource;
 import com.kuflow.rest.client.resource.ProcessResource;
+import com.kuflow.rest.client.resource.TaskElementValueWrapperResource;
 import com.kuflow.rest.client.resource.TaskResource;
-import com.kuflow.rest.client.util.ElementUtils;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import org.slf4j.Logger;
 
 public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoanWorkflow {
@@ -80,20 +76,20 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
         LOGGER.info("Started loan process {}", workflowRequest.getProcessId());
 
-        ProcessResource process = this.startProcess(workflowRequest.getProcessId());
-
         TaskResource taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
-        ElementValueDecisionResource currencyField = this.retrieveElementDecision(taskLoanApplication, "currency");
-        ElementValueFieldResource amountField = this.retrieveElementValue(taskLoanApplication, "amount");
 
-        BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
+        String currency = taskLoanApplication.getElementValues().get("currency").getValueAsString();
+        String amount = taskLoanApplication.getElementValues().get("amount").getValueAsString();
+
+        BigDecimal amountEUR = this.convertToEuros(currency, amount);
 
         TaskResource taskNotification;
         if (amountEUR.compareTo(BigDecimal.valueOf(5_000)) > 0) {
             TaskResource taskApproveLoan = this.createTaskApproveLoan(taskLoanApplication, amountEUR);
-            ElementValueDecisionResource authorizedField = this.retrieveElementDecision(taskApproveLoan, "authorized");
 
-            if (authorizedField.getCode().equals("OK")) {
+            String authorized = taskApproveLoan.getElementValues().get("authorized").getValueAsString();
+
+            if (authorized.equals("OK")) {
                 taskNotification = this.createTaskNotificationGranted(workflowRequest);
             } else {
                 taskNotification = this.createTaskNotificationRejection(workflowRequest);
@@ -102,13 +98,24 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
             taskNotification = this.createTaskNotificationGranted(workflowRequest);
         }
 
+        ProcessResource process = this.retrieveProcess(workflowRequest);
+
         this.assignTaskToProcessInitiator(taskNotification, process);
 
-        CompleteProcessResponseResource completeProcess = this.completeProcess(workflowRequest.getProcessId());
+        CompleteProcessResponseResource completeProcess = this.completeProcess(workflowRequest);
 
         LOGGER.info("Finished loan process {}", workflowRequest.getProcessId());
 
         return this.completeWorkflow(completeProcess);
+    }
+
+    private ProcessResource retrieveProcess(WorkflowRequestResource workflowRequest) {
+        RetrieveProcessRequestResource request = new RetrieveProcessRequestResource();
+        request.setProcessId(workflowRequest.getProcessId());
+
+        RetrieveProcessResponseResource response = this.kuflowActivities.retrieveProcess(request);
+
+        return response.getProcess();
     }
 
     private WorkflowResponseResource completeWorkflow(CompleteProcessResponseResource completeProcess) {
@@ -118,18 +125,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return workflowResponse;
     }
 
-    private ProcessResource startProcess(UUID processId) {
-        StartProcessRequestResource request = new StartProcessRequestResource();
-        request.setProcessId(processId);
-
-        StartProcessResponseResource response = this.kuflowActivities.startProcess(request);
-
-        return response.getProcess();
-    }
-
-    private CompleteProcessResponseResource completeProcess(UUID processId) {
+    private CompleteProcessResponseResource completeProcess(WorkflowRequestResource workflowRequest) {
         CompleteProcessRequestResource request = new CompleteProcessRequestResource();
-        request.setProcessId(processId);
+        request.setProcessId(workflowRequest.getProcessId());
 
         return this.kuflowActivities.completeProcess(request);
     }
@@ -141,12 +139,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskLoanApplication(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_LOAN_APPLICATION);
 
-        TaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
 
         return response.getTask();
     }
@@ -159,27 +157,17 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskApproveLoan(TaskResource taskLoanApplication, BigDecimal amountEUR) {
-        ElementValueFieldResource firstNameField = this.retrieveElementValue(taskLoanApplication, "firstName");
-        ElementValueFieldResource lastNameField = this.retrieveElementValue(taskLoanApplication, "lastName");
+        String firstName = taskLoanApplication.getElementValues().get("firstName").getValueAsString();
+        String lastName = taskLoanApplication.getElementValues().get("lastName").getValueAsString();
 
-        ElementValueFieldResource nameField = new ElementValueFieldResource();
-        nameField.setElementDefinitionType(ElementDefinitionTypeResource.FIELD);
-        nameField.setElementDefinitionCode("name");
-        nameField.setValue(firstNameField.getValue() + " " + lastNameField.getValue());
-
-        ElementValueFieldResource amountRequestedField = new ElementValueFieldResource();
-        amountRequestedField.setElementDefinitionType(ElementDefinitionTypeResource.FIELD);
-        amountRequestedField.setElementDefinitionCode("amountRequested");
-        amountRequestedField.setValue(amountEUR.toPlainString());
-
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(taskLoanApplication.getProcessId());
         request.setTaskDefinitionCode(TASK_APPROVE_LOAN);
-        request.addElementValue(nameField);
-        request.addElementValue(amountRequestedField);
+        request.putElementValuesItem("name", TaskElementValueWrapperResource.of(firstName + " " + lastName));
+        request.putElementValuesItem("amountRequested", TaskElementValueWrapperResource.of(amountEUR.toPlainString()));
 
-        TaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
 
         return response.getTask();
     }
@@ -191,12 +179,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskNotificationGranted(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_GRANTED);
 
-        TaskResponseResource response = this.kuflowActivities.createTask(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTask(request);
 
         return response.getTask();
     }
@@ -208,12 +196,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskNotificationRejection(WorkflowRequestResource workflowRequest) {
-        TaskRequestResource request = new TaskRequestResource();
+        CreateTaskRequestResource request = new CreateTaskRequestResource();
         request.setTaskId(Workflow.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_REJECTION);
 
-        TaskResponseResource response = this.kuflowActivities.createTask(request);
+        CreateTaskResponseResource response = this.kuflowActivities.createTask(request);
 
         return response.getTask();
     }
@@ -226,21 +214,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         this.kuflowActivities.assignTask(request);
     }
 
-    private BigDecimal convertToEuros(ElementValueDecisionResource currencyField, ElementValueFieldResource amountField) {
-        BigDecimal amount = new BigDecimal(amountField.getValue() != null ? amountField.getValue() : "0");
-        if (currencyField.getCode().equals("EUR")) {
-            return amount;
+    private BigDecimal convertToEuros(String currency, String amount) {
+        BigDecimal amountEUR = new BigDecimal(amount != null ? amount : "0");
+        if (currency.equals("EUR")) {
+            return amountEUR;
         } else {
-            String amountText = this.currencyConversionActivities.convert(amount.toPlainString(), currencyField.getCode(), "EUR");
+            String amountText = this.currencyConversionActivities.convert(amountEUR.toPlainString(), currency, "EUR");
             return new BigDecimal(amountText);
         }
-    }
-
-    private ElementValueDecisionResource retrieveElementDecision(TaskResource taskLoanApplication, String code) {
-        return ElementUtils.getSingleValueByCode(taskLoanApplication, code, ElementValueDecisionResource.class);
-    }
-
-    private ElementValueFieldResource retrieveElementValue(TaskResource taskLoanApplication, String code) {
-        return ElementUtils.getSingleValueByCode(taskLoanApplication, code, ElementValueFieldResource.class);
     }
 }

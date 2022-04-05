@@ -7,9 +7,7 @@
 package com.kuflow.engine.samples.worker.email.bootstrap;
 
 import com.kuflow.engine.client.activity.email.EmailActivities;
-import com.kuflow.engine.client.activity.email.EmailActivitiesDelegate;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
-import com.kuflow.engine.client.activity.kuflow.KuFlowActivitiesDelegate;
 import com.kuflow.engine.samples.worker.email.config.property.ApplicationProperties;
 import com.kuflow.engine.samples.worker.email.workflow.SampleWorkflowImpl;
 import io.temporal.worker.Worker;
@@ -62,8 +60,8 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private void startWorkers() {
         Worker worker = this.factory.newWorker(this.applicationProperties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleWorkflowImpl.class);
-        worker.registerActivitiesImplementations(new KuFlowActivitiesDelegate(this.kuflowActivities));
-        worker.registerActivitiesImplementations(new EmailActivitiesDelegate(this.emailActivities));
+        worker.registerActivitiesImplementations(this.kuflowActivities);
+        worker.registerActivitiesImplementations(this.emailActivities);
 
         this.factory.start();
     }

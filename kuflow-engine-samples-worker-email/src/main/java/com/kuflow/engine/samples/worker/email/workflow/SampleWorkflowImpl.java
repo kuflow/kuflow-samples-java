@@ -12,19 +12,17 @@ import com.kuflow.engine.client.activity.email.resource.SendMailRequestResource;
 import com.kuflow.engine.client.activity.kuflow.KuFlowActivities;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.LogRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.StartProcessResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskClaimRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskCompleteRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskRequestResource;
-import com.kuflow.engine.client.activity.kuflow.resource.TaskResponseResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
-import com.kuflow.rest.client.resource.ElementValueFieldResource;
 import com.kuflow.rest.client.resource.LogLevelResource;
-import com.kuflow.rest.client.util.ElementUtils;
+import com.kuflow.rest.client.resource.TaskElementValueWrapperResource;
+import com.kuflow.rest.client.resource.TaskResource;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
@@ -77,106 +75,97 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     }
 
     @Override
-    public WorkflowResponseResource runWorkflow(WorkflowRequestResource request) {
-        StartProcessResponseResource startProcess = this.startProcess(request.getProcessId());
+    public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
+        UUID processId = workflowRequest.getProcessId();
 
-        TaskResponseResource taskFillInfo = this.createTaskFillInfo(startProcess);
+        TaskResource taskFillInfo = this.createTaskFillInfo(processId);
 
-        this.createAutomaticTaskSendEmail(startProcess, taskFillInfo);
+        this.createAutomaticTaskSendEmail(processId, taskFillInfo);
 
-        CompleteProcessResponseResource completeProcess = this.completeProcess(request.getProcessId());
+        String completeProcessMessage = this.completeProcess(processId);
 
-        return this.completeWorkflow(completeProcess);
+        return this.completeWorkflow(completeProcessMessage);
     }
 
-    private WorkflowResponseResource completeWorkflow(CompleteProcessResponseResource completeProcess) {
+    /**
+     * Complete the Workflow
+     * @param completeProcess message
+     * @return
+     */
+    private WorkflowResponseResource completeWorkflow(String completeProcessMessage) {
         WorkflowResponseResource workflowResponse = new WorkflowResponseResource();
-        workflowResponse.setMessage(completeProcess.getMessage());
+        workflowResponse.setMessage(completeProcessMessage);
 
         return workflowResponse;
     }
 
-    private StartProcessResponseResource startProcess(UUID processId) {
-        StartProcessRequestResource request = new StartProcessRequestResource();
-        request.setProcessId(processId);
-
-        return this.kuflowActivities.startProcess(request);
-    }
-
-    private CompleteProcessResponseResource completeProcess(UUID processId) {
+    /**
+     * Complete the process
+     *
+     * @param processId process identifier
+     * @return
+     */
+    private String completeProcess(UUID processId) {
         CompleteProcessRequestResource request = new CompleteProcessRequestResource();
         request.setProcessId(processId);
 
-        return this.kuflowActivities.completeProcess(request);
+        CompleteProcessResponseResource response = this.kuflowActivities.completeProcess(request);
+
+        return response.getMessage();
     }
 
     /**
      * Create a task in KuFlow in order to collect the necessary information to send an email.
      *
-     * @param startProcess response of start process activity
+     * @param processId process identifier
      * @return task created
      */
-    private TaskResponseResource createTaskFillInfo(StartProcessResponseResource startProcess) {
-        TaskRequestResource task = new TaskRequestResource();
-        task.setProcessId(startProcess.getProcess().getId());
+    private TaskResource createTaskFillInfo(UUID processId) {
+        CreateTaskRequestResource task = new CreateTaskRequestResource();
+        task.setProcessId(processId);
         task.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
         task.setTaskId(Workflow.randomUUID());
 
         // Create Task in KuFlow
-        return this.kuflowActivities.createTaskAndWaitTermination(task);
+        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(task);
+
+        return response.getTask();
     }
 
     /**
-     * Execute a Temporal activity that sends an email obtaining the data from a previous KuFlow task.
+     * Execute a Temporal activity that sends an email with the data from a previous KuFlow task.
      *
      * To see the activity process reflected in the KuFlow application, we created a task.
      * The execution of Temporal activities does not have to have direct correspondence with KuFlow tasks. Its use
      * depends on your Workflow logic. In the same way, several activities could be executed and have a single
      * automatic task in Kuflow that encompasses them. As always, it all depends on the requirements of your workflow.
      *
-     * @param startProcess response of start process activity
-     * @param infoTask kuflow task with the data to send in the email
+     * @param processId process identifier
+     * @param infoTask task with the data to send in the email
      * @return task created
      */
-    private TaskResponseResource createAutomaticTaskSendEmail(StartProcessResponseResource startProcess, TaskResponseResource infoTask) {
-        TaskRequestResource task = new TaskRequestResource();
+    private CreateTaskResponseResource createAutomaticTaskSendEmail(UUID processId, TaskResource infoTask) {
+        CreateTaskRequestResource task = new CreateTaskRequestResource();
         task.setTaskId(Workflow.randomUUID());
-        task.setProcessId(startProcess.getProcess().getId());
+        task.setProcessId(processId);
         task.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
         // Create Automatic Task in KuFlow
-        TaskResponseResource taskResponse = this.kuflowActivities.createTask(task);
+        CreateTaskResponseResource taskResponse = this.kuflowActivities.createTask(task);
 
         // Claim Automatic Task: Our worker will be responsible for its completion.
         TaskClaimRequestResource taskClaimrequestResource = new TaskClaimRequestResource();
         taskClaimrequestResource.setTaskId(taskResponse.getTask().getId());
         this.kuflowActivities.claimTask(taskClaimrequestResource);
 
-        // Get the recipient email from info task
-        ElementValueFieldResource emailElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_RECIPIENT.name(),
-            ElementValueFieldResource.class
-        );
-
-        // Get the email body from info task
-        ElementValueFieldResource subjectElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_SUBJECT.name(),
-            ElementValueFieldResource.class
-        );
-
-        ElementValueFieldResource bodyElementValue = ElementUtils.getSingleValueByCode(
-            infoTask.getTask(),
-            ElementDefinitionCode.EMAIL_BODY.name(),
-            ElementValueFieldResource.class
-        );
+        // Get values from Info Task
+        Map<String, TaskElementValueWrapperResource> infoTaskElementValues = infoTask.getElementValues();
 
         EmailResource email = new EmailResource();
         email.setTemplate("email");
-        email.setTo(emailElementValue.getValue());
-        email.addVariables("subject", subjectElementValue.getValue());
-        email.addVariables("body", bodyElementValue.getValue());
+        email.setTo(infoTaskElementValues.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).getValueAsString());
+        email.addVariables("subject", infoTaskElementValues.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).getValueAsString());
+        email.addVariables("body", infoTaskElementValues.get(ElementDefinitionCode.EMAIL_BODY.name()).getValueAsString());
 
         // Send a mail
         SendMailRequestResource request = new SendMailRequestResource();
@@ -194,6 +183,12 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         return taskResponse;
     }
 
+    /**
+     * Add a log message to the referenced KuFlow task
+     *
+     * @param taskId task identifier
+     * @param message a log message
+     */
     private void addLogInfoEntryTask(UUID taskId, String message) {
         LogRequestResource request = new LogRequestResource();
         request.setTaskId(taskId);
