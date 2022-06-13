@@ -64,7 +64,7 @@ public class TemporalConfiguration {
 
         WorkflowServiceStubsOptions options = builder.validateAndBuildWithDefaults();
 
-        return WorkflowServiceStubs.newInstance(options);
+        return WorkflowServiceStubs.newServiceStubs(options);
     }
 
     @Bean
