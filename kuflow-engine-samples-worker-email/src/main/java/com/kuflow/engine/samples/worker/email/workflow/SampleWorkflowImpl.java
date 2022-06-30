@@ -89,7 +89,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     /**
      * Complete the Workflow
-     * @param completeProcess message
+     * @param completeProcessMessage message
      * @return
      */
     private WorkflowResponseResource completeWorkflow(String completeProcessMessage) {
@@ -196,6 +196,6 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         request.setLevel(LogLevelResource.INFO);
         request.setMessage(message);
 
-        this.kuflowActivities.appendLog(request);
+        this.kuflowActivities.appendTaskLog(request);
     }
 }
