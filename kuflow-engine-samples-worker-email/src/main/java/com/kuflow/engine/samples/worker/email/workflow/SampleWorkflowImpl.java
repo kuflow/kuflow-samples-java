@@ -15,6 +15,8 @@ import com.kuflow.engine.client.activity.kuflow.resource.CompleteProcessResponse
 import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.LogRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskClaimRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskCompleteRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
@@ -68,7 +70,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
             Workflow.newActivityStub(
                 KuFlowActivities.class,
                 defaultActivityOptions,
-                Map.of(TemporalUtils.getActivityType(KuFlowActivities.class, "createTaskAndWaitTermination"), asyncActivityOptions)
+                Map.of(TemporalUtils.getActivityType(KuFlowActivities.class, "createTaskAndWaitFinished"), asyncActivityOptions)
             );
 
         this.emailActivities = Workflow.newActivityStub(EmailActivities.class, defaultActivityOptions);
@@ -90,7 +92,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     /**
      * Complete the Workflow
      * @param completeProcessMessage message
-     * @return
+     * @return the workflow response
      */
     private WorkflowResponseResource completeWorkflow(String completeProcessMessage) {
         WorkflowResponseResource workflowResponse = new WorkflowResponseResource();
@@ -103,7 +105,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * Complete the process
      *
      * @param processId process identifier
-     * @return
+     * @return response message
      */
     private String completeProcess(UUID processId) {
         CompleteProcessRequestResource request = new CompleteProcessRequestResource();
@@ -121,20 +123,26 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * @return task created
      */
     private TaskResource createTaskFillInfo(UUID processId) {
-        CreateTaskRequestResource task = new CreateTaskRequestResource();
-        task.setProcessId(processId);
-        task.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
-        task.setTaskId(Workflow.randomUUID());
+        UUID taskId = UUID.randomUUID();
+
+        CreateTaskRequestResource createTaskRequest = new CreateTaskRequestResource();
+        createTaskRequest.setTaskId(taskId);
+        createTaskRequest.setProcessId(processId);
+        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
 
         // Create Task in KuFlow
-        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(task);
+        this.kuflowActivities.createTaskAndWaitFinished(createTaskRequest);
 
-        return response.getTask();
+        RetrieveTaskRequestResource retrieveTaskRequest = new RetrieveTaskRequestResource();
+        retrieveTaskRequest.setTaskId(taskId);
+        RetrieveTaskResponseResource retrieveTaskResponse = this.kuflowActivities.retrieveTask(retrieveTaskRequest);
+
+        return retrieveTaskResponse.getTask();
     }
 
     /**
      * Execute a Temporal activity that sends an email with the data from a previous KuFlow task.
-     *
+     * <br>
      * To see the activity process reflected in the KuFlow application, we created a task.
      * The execution of Temporal activities does not have to have direct correspondence with KuFlow tasks. Its use
      * depends on your Workflow logic. In the same way, several activities could be executed and have a single

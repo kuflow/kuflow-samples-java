@@ -58,6 +58,7 @@ public class SampleEngineWorkerLoanApp implements CommandLineRunner {
 
         LOGGER.info(
             """
+
             ----------------------------------------------------------
             \tApplication '{}' is running! Access URLs:
             \tLocal: \t\t{}://localhost:{}{}

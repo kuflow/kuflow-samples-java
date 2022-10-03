@@ -8,6 +8,11 @@ package com.kuflow.engine.samples.worker.loan;
 
 import com.kuflow.engine.client.common.authorization.KuFlowAuthorizationTokenSupplier;
 import com.kuflow.engine.client.common.error.KuFlowEngineClientException;
+import com.kuflow.engine.client.common.payload.codec.EncryptionPayloadCodec;
+import com.kuflow.engine.client.common.payload.codec.encryption.PayloadEncryptor;
+import com.kuflow.engine.client.common.payload.codec.encryption.PayloadEncryptors;
+import com.kuflow.engine.client.common.payload.codec.store.SecretStore;
+import com.kuflow.engine.client.common.payload.codec.store.SecretStores;
 import com.kuflow.engine.client.common.tracing.MDCContextPropagator;
 import com.kuflow.engine.samples.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.rest.client.controller.AuthenticationApi;
@@ -16,6 +21,8 @@ import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
 import io.temporal.client.ActivityCompletionClient;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
+import io.temporal.common.converter.CodecDataConverter;
+import io.temporal.common.converter.DefaultDataConverter;
 import io.temporal.serviceclient.SimpleSslContextBuilder;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
@@ -33,7 +40,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -67,11 +77,23 @@ public class TemporalConfiguration {
     }
 
     @Bean
-    public WorkflowClient workflowClient(WorkflowServiceStubs service) {
+    public EncryptionPayloadCodec encryptionPayloadCodec() {
+        String defaultSecretKeyId = "test-key-test-key-test-key-test!";
+        SecretKey secretKey = new SecretKeySpec(defaultSecretKeyId.getBytes(StandardCharsets.UTF_8), "AES");
+
+        SecretStore secretStore = SecretStores.memory(defaultSecretKeyId, Map.of(defaultSecretKeyId, secretKey));
+        PayloadEncryptor payloadEncryptor = PayloadEncryptors.aesGcm(secretStore);
+
+        return new EncryptionPayloadCodec(payloadEncryptor);
+    }
+
+    @Bean
+    public WorkflowClient workflowClient(WorkflowServiceStubs service, EncryptionPayloadCodec encryptionPayloadCodec) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
             .setNamespace(this.sampleEngineWorkerLoanProperties.getTemporal().getNamespace())
-            .setContextPropagators(Collections.singletonList(new MDCContextPropagator()))
+            .setContextPropagators(List.of(new MDCContextPropagator()))
+            .setDataConverter(new CodecDataConverter(DefaultDataConverter.newDefaultInstance(), List.of(encryptionPayloadCodec)))
             .build();
 
         return WorkflowClient.newInstance(service, options);
