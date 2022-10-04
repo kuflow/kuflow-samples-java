@@ -13,6 +13,8 @@ import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskRequestResour
 import com.kuflow.engine.client.activity.kuflow.resource.CreateTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessResponseResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskRequestResource;
+import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskAssignRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
@@ -27,6 +29,7 @@ import io.temporal.workflow.Workflow;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 
 public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoanWorkflow {
@@ -66,7 +69,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
             Workflow.newActivityStub(
                 KuFlowActivities.class,
                 defaultActivityOptions,
-                Map.of(TemporalUtils.getActivityType(KuFlowActivities.class, "createTaskAndWaitTermination"), asyncActivityOptions)
+                Map.of(TemporalUtils.getActivityType(KuFlowActivities.class, "createTaskAndWaitFinished"), asyncActivityOptions)
             );
 
         this.currencyConversionActivities = Workflow.newActivityStub(CurrencyConversionActivities.class, defaultActivityOptions);
@@ -139,14 +142,20 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskLoanApplication(WorkflowRequestResource workflowRequest) {
-        CreateTaskRequestResource request = new CreateTaskRequestResource();
-        request.setTaskId(Workflow.randomUUID()); // garantice idempotence
-        request.setProcessId(workflowRequest.getProcessId());
-        request.setTaskDefinitionCode(TASK_LOAN_APPLICATION);
+        UUID taskId = Workflow.randomUUID();
 
-        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        CreateTaskRequestResource createTaskRequest = new CreateTaskRequestResource();
+        createTaskRequest.setTaskId(taskId); // garantice idempotence
+        createTaskRequest.setProcessId(workflowRequest.getProcessId());
+        createTaskRequest.setTaskDefinitionCode(TASK_LOAN_APPLICATION);
 
-        return response.getTask();
+        this.kuflowActivities.createTaskAndWaitFinished(createTaskRequest);
+
+        RetrieveTaskRequestResource retrieveTaskRequest = new RetrieveTaskRequestResource();
+        retrieveTaskRequest.setTaskId(taskId);
+        RetrieveTaskResponseResource retrieveTaskResponse = this.kuflowActivities.retrieveTask(retrieveTaskRequest);
+
+        return retrieveTaskResponse.getTask();
     }
 
     /**
@@ -157,19 +166,25 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskApproveLoan(TaskResource taskLoanApplication, BigDecimal amountEUR) {
+        UUID taskId = Workflow.randomUUID();
+
         String firstName = taskLoanApplication.getElementValues().get("firstName").getValueAsString();
         String lastName = taskLoanApplication.getElementValues().get("lastName").getValueAsString();
 
-        CreateTaskRequestResource request = new CreateTaskRequestResource();
-        request.setTaskId(Workflow.randomUUID()); // garantice idempotence
-        request.setProcessId(taskLoanApplication.getProcessId());
-        request.setTaskDefinitionCode(TASK_APPROVE_LOAN);
-        request.putElementValuesItem("name", TaskElementValueWrapperResource.of(firstName + " " + lastName));
-        request.putElementValuesItem("amountRequested", TaskElementValueWrapperResource.of(amountEUR.toPlainString()));
+        CreateTaskRequestResource createTaskRequest = new CreateTaskRequestResource();
+        createTaskRequest.setTaskId(taskId); // garantice idempotence
+        createTaskRequest.setProcessId(taskLoanApplication.getProcessId());
+        createTaskRequest.setTaskDefinitionCode(TASK_APPROVE_LOAN);
+        createTaskRequest.putElementValuesItem("name", TaskElementValueWrapperResource.of(firstName + " " + lastName));
+        createTaskRequest.putElementValuesItem("amountRequested", TaskElementValueWrapperResource.of(amountEUR.toPlainString()));
 
-        CreateTaskResponseResource response = this.kuflowActivities.createTaskAndWaitTermination(request);
+        this.kuflowActivities.createTaskAndWaitFinished(createTaskRequest);
 
-        return response.getTask();
+        RetrieveTaskRequestResource retrieveTaskRequest = new RetrieveTaskRequestResource();
+        retrieveTaskRequest.setTaskId(taskId);
+        RetrieveTaskResponseResource retrieveTaskResponse = this.kuflowActivities.retrieveTask(retrieveTaskRequest);
+
+        return retrieveTaskResponse.getTask();
     }
 
     /**
