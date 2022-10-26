@@ -19,6 +19,7 @@ import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskRequestReso
 import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskClaimRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskCompleteRequestResource;
+import com.kuflow.engine.client.common.KuFlowGenerator;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
@@ -49,6 +50,8 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     private final EmailActivities emailActivities;
 
+    private KuFlowGenerator kuflowGenerator;
+
     public SampleWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
@@ -78,6 +81,8 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     @Override
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
+        this.kuflowGenerator = new KuFlowGenerator(workflowRequest.getProcessId());
+
         UUID processId = workflowRequest.getProcessId();
 
         TaskResource taskFillInfo = this.createTaskFillInfo(processId);
@@ -123,7 +128,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * @return task created
      */
     private TaskResource createTaskFillInfo(UUID processId) {
-        UUID taskId = UUID.randomUUID();
+        UUID taskId = this.kuflowGenerator.randomUUID();
 
         CreateTaskRequestResource createTaskRequest = new CreateTaskRequestResource();
         createTaskRequest.setTaskId(taskId);
@@ -154,7 +159,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      */
     private CreateTaskResponseResource createAutomaticTaskSendEmail(UUID processId, TaskResource infoTask) {
         CreateTaskRequestResource task = new CreateTaskRequestResource();
-        task.setTaskId(Workflow.randomUUID());
+        task.setTaskId(this.kuflowGenerator.randomUUID());
         task.setProcessId(processId);
         task.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
