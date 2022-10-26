@@ -16,6 +16,7 @@ import com.kuflow.engine.client.activity.kuflow.resource.RetrieveProcessResponse
 import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskRequestResource;
 import com.kuflow.engine.client.activity.kuflow.resource.RetrieveTaskResponseResource;
 import com.kuflow.engine.client.activity.kuflow.resource.TaskAssignRequestResource;
+import com.kuflow.engine.client.common.KuFlowGenerator;
 import com.kuflow.engine.client.common.resource.WorkflowRequestResource;
 import com.kuflow.engine.client.common.resource.WorkflowResponseResource;
 import com.kuflow.engine.client.common.util.TemporalUtils;
@@ -48,6 +49,8 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     private final CurrencyConversionActivities currencyConversionActivities;
 
+    private KuFlowGenerator kuflowGenerator;
+
     public SampleEngineWorkerLoanWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
@@ -78,6 +81,8 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     @Override
     public WorkflowResponseResource runWorkflow(WorkflowRequestResource workflowRequest) {
         LOGGER.info("Started loan process {}", workflowRequest.getProcessId());
+
+        this.kuflowGenerator = new KuFlowGenerator(workflowRequest.getProcessId());
 
         TaskResource taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
 
@@ -142,7 +147,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskLoanApplication(WorkflowRequestResource workflowRequest) {
-        UUID taskId = Workflow.randomUUID();
+        UUID taskId = this.kuflowGenerator.randomUUID();
 
         CreateTaskRequestResource createTaskRequest = new CreateTaskRequestResource();
         createTaskRequest.setTaskId(taskId); // garantice idempotence
@@ -166,7 +171,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private TaskResource createTaskApproveLoan(TaskResource taskLoanApplication, BigDecimal amountEUR) {
-        UUID taskId = Workflow.randomUUID();
+        UUID taskId = this.kuflowGenerator.randomUUID();
 
         String firstName = taskLoanApplication.getElementValues().get("firstName").getValueAsString();
         String lastName = taskLoanApplication.getElementValues().get("lastName").getValueAsString();
@@ -195,7 +200,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      */
     private TaskResource createTaskNotificationGranted(WorkflowRequestResource workflowRequest) {
         CreateTaskRequestResource request = new CreateTaskRequestResource();
-        request.setTaskId(Workflow.randomUUID()); // garantice idempotence
+        request.setTaskId(this.kuflowGenerator.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_GRANTED);
 
@@ -212,7 +217,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      */
     private TaskResource createTaskNotificationRejection(WorkflowRequestResource workflowRequest) {
         CreateTaskRequestResource request = new CreateTaskRequestResource();
-        request.setTaskId(Workflow.randomUUID()); // garantice idempotence
+        request.setTaskId(this.kuflowGenerator.randomUUID()); // garantice idempotence
         request.setProcessId(workflowRequest.getProcessId());
         request.setTaskDefinitionCode(TASK_NOTIFICATION_REJECTION);
 
