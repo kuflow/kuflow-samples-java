@@ -162,4 +162,4 @@ temp/
 ######################
 # Spring
 ######################
-**/application-local.yml
+**/application-local.yaml

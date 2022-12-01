@@ -1,0 +1,23 @@
+# ===================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+# ===================================================================
+
+logging:
+  level:
+    ROOT: INFO
+
+spring:
+  application:
+    name: KuFlow REST Worker Sample Loan
+  config:
+    import:
+      - "classpath:config/application-fillme.yaml"
+      - "optional:classpath:config/application-local.yaml"
+
+server:
+  port: 8880
+  servlet:
+    encoding:
+      force: true
