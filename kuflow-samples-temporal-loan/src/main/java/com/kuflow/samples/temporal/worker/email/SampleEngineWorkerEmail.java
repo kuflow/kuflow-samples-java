@@ -31,8 +31,10 @@ import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerEmailPropertie
 import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivitiesImpl;
 import com.kuflow.samples.temporal.worker.email.workflow.SampleEngineWorkerLoanWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowActivitiesImpl;
+import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivitiesImpl;
+import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivitiesImpl;
 import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
 import com.kuflow.temporal.common.ssl.SslContextBuilder;
 import com.kuflow.temporal.common.tracing.MDCContextPropagator;
@@ -72,12 +74,14 @@ public class SampleEngineWorkerEmail {
 
         WorkerFactory factory = WorkerFactory.newInstance(client);
 
-        KuFlowActivities kuFlowActivities = new KuFlowActivitiesImpl(kuFlowRestClient);
+        KuFlowSyncActivities kuFlowSyncActivities = new KuFlowSyncActivitiesImpl(kuFlowRestClient);
+        KuFlowAsyncActivities kuFlowAsyncActivities = new KuFlowAsyncActivitiesImpl(kuFlowRestClient);
         CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
 
         Worker worker = factory.newWorker(properties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class);
-        worker.registerActivitiesImplementations(kuFlowActivities);
+        worker.registerActivitiesImplementations(kuFlowSyncActivities);
+        worker.registerActivitiesImplementations(kuFlowAsyncActivities);
         worker.registerActivitiesImplementations(conversionActivities);
 
         factory.start();

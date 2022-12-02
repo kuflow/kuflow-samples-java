@@ -24,7 +24,8 @@ package com.kuflow.samples.temporal.worker.email;
 
 import com.kuflow.samples.temporal.worker.email.workflow.SampleWorkflowImpl;
 import com.kuflow.temporal.activity.email.EmailActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +42,9 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final WorkerFactory factory;
 
-    private final KuFlowActivities kuflowActivities;
+    private final KuFlowSyncActivities kuFlowSyncActivities;
+
+    private final KuFlowAsyncActivities kuFlowAsyncActivities;
 
     private final EmailActivities emailActivities;
 
@@ -50,12 +53,14 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     public TemporalBootstrap(
         SampleEngineWorkerEmailProperties sampleEngineWorkerEmailProperties,
         WorkerFactory factory,
-        KuFlowActivities kuflowActivities,
+        KuFlowSyncActivities kuFlowSyncActivities,
+        KuFlowAsyncActivities kuFlowAsyncActivities,
         EmailActivities emailActivities
     ) {
         this.sampleEngineWorkerEmailProperties = sampleEngineWorkerEmailProperties;
         this.factory = factory;
-        this.kuflowActivities = kuflowActivities;
+        this.kuFlowSyncActivities = kuFlowSyncActivities;
+        this.kuFlowAsyncActivities = kuFlowAsyncActivities;
         this.emailActivities = emailActivities;
     }
 
@@ -75,7 +80,8 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private void startWorkers() {
         Worker worker = this.factory.newWorker(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleWorkflowImpl.class);
-        worker.registerActivitiesImplementations(this.kuflowActivities);
+        worker.registerActivitiesImplementations(this.kuFlowSyncActivities);
+        worker.registerActivitiesImplementations(this.kuFlowAsyncActivities);
         worker.registerActivitiesImplementations(this.emailActivities);
 
         this.factory.start();

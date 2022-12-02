@@ -24,7 +24,8 @@ package com.kuflow.samples.temporal.worker.loan;
 
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +42,9 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final WorkerFactory factory;
 
-    private final KuFlowActivities kuflowActivities;
+    private final KuFlowSyncActivities kuFlowSyncActivities;
+
+    private final KuFlowAsyncActivities kuFlowAsyncActivities;
 
     private final CurrencyConversionActivities currencyConversionActivities;
 
@@ -49,12 +52,14 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     public TemporalBootstrap(
         WorkerFactory factory,
-        KuFlowActivities kuflowActivities,
+        KuFlowSyncActivities kuFlowSyncActivities,
+        KuFlowAsyncActivities kuFlowAsyncActivities,
         CurrencyConversionActivities currencyConversionActivities,
         SampleEngineWorkerLoanProperties sampleEngineWorkerLoanProperties
     ) {
         this.factory = factory;
-        this.kuflowActivities = kuflowActivities;
+        this.kuFlowSyncActivities = kuFlowSyncActivities;
+        this.kuFlowAsyncActivities = kuFlowAsyncActivities;
         this.currencyConversionActivities = currencyConversionActivities;
         this.sampleEngineWorkerLoanProperties = sampleEngineWorkerLoanProperties;
     }
@@ -75,7 +80,8 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private void startWorkers() {
         Worker worker = this.factory.newWorker(this.sampleEngineWorkerLoanProperties.getTemporal().getKuflowQueue());
         worker.registerWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class);
-        worker.registerActivitiesImplementations(this.kuflowActivities);
+        worker.registerActivitiesImplementations(this.kuFlowSyncActivities);
+        worker.registerActivitiesImplementations(this.kuFlowAsyncActivities);
         worker.registerActivitiesImplementations(this.currencyConversionActivities);
 
         this.factory.start();
