@@ -1,6 +1,6 @@
 [![GitHub](https://img.shields.io/github/license/kuflow/kuflow-engine-samples-java?label=License)](https://github.com/kuflow/kuflow-engine-samples-java/blob/master/LICENSE)
 
-# KuFlow Engine Samples Java
+# KuFlow Samples Java
 
 > ***"KuFlow is a platform on which you can design and execute your business processes"***
 
