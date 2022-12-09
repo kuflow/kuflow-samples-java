@@ -21,24 +21,24 @@
 # THE SOFTWARE.
 #
 
-# Editor configuration, see http://editorconfig.org
-root = true
+version: '3.8'
 
-[*]
-charset = utf-8
-indent_style = space
-indent_size = 2
-insert_final_newline = true
-max_line_length = 140
-trim_trailing_whitespace = true
-end_of_line = lf
+services:
 
-[*.md]
-max_line_length = off
-trim_trailing_whitespace = false
+  fake-smtp-server:
+    image: gessnerfl/fake-smtp-server:1.7.1
+    container_name: fake-smtp-server
+    environment:
+      - FAKESMTP_AUTHENTICATION_USERNAME=username
+      - FAKESMTP_AUTHENTICATION_PASSWORD=password
+    ports:
+      - 3025:5025
+      - 8082:5080
+      - 8083:5081
+    networks:
+      - kuflow-samples-network
 
-[*.sql]
-max_line_length = off
-
-[*.java]
-indent_size = 4
+networks:
+  kuflow-samples-network:
+    driver: bridge
+    name: kuflow-samples-net

@@ -1,0 +1,14 @@
+# ===================================================================
+# PLEASE COMPLETE ALL CONFIGURATIONS BEFORE STARTING THE WORKER
+# ===================================================================
+
+kuflow:
+  api:
+
+    # ID of the APPLICATION configured in KUFLOW.
+    # Get it in "Application details" in the Kuflow APP.
+    client-id:
+
+    # TOKEN of the APPLICATION configured in KUFLOW.
+    # Get it in "Application details" in the Kuflow APP.
+    client-secret:
