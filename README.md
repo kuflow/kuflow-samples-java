@@ -1,4 +1,4 @@
-[![GitHub](https://img.shields.io/github/license/kuflow/kuflow-engine-samples-java?label=License)](https://github.com/kuflow/kuflow-engine-samples-java/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/license/kuflow/kuflow-samples-java?label=License)](https://github.com/kuflow/kuflow-samples-java/blob/master/LICENSE)
 
 # KuFlow Samples Java
 
@@ -20,4 +20,4 @@ We are happy to receive your help and comments, together we will dance a wonderf
 
 ## License
 
-[MIT License](https://github.com/kuflow/kuflow-engine-samples-java/blob/master/LICENSE)
+[MIT License](https://github.com/kuflow/kuflow-samples-java/blob/master/LICENSE)
