@@ -27,8 +27,8 @@ import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.ProcessState;
 import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskAssignCommand;
+import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.rest.model.TaskState;
-import com.kuflow.rest.model.TasksDefinitionSummary;
 import com.kuflow.rest.model.WebhookEvent;
 import com.kuflow.rest.model.WebhookEventProcessStateChanged;
 import com.kuflow.rest.model.WebhookEventProcessStateChangedData;
@@ -143,7 +143,7 @@ public class SampleRestWorkerLoanController {
     }
 
     private void createTaskLoanApplication(WebhookEventProcessStateChangedData data) {
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_LOAN_APPLICATION);
 
         Task task = new Task();
@@ -157,7 +157,7 @@ public class SampleRestWorkerLoanController {
         String firstName = taskLoanApplication.getElementValueAsString("firstName");
         String lastName = taskLoanApplication.getElementValueAsString("lastName");
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_APPROVE_LOAN);
 
         Task taskApproveLoan = new Task();
@@ -170,7 +170,7 @@ public class SampleRestWorkerLoanController {
     }
 
     private Task createTaskNotificationRejection(WebhookEventTaskStateChangedData data) {
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_NOTIFICATION_REJECTION);
 
         Task taskNotificationRejection = new Task();
@@ -181,7 +181,7 @@ public class SampleRestWorkerLoanController {
     }
 
     private Task createTaskNotificationGranted(WebhookEventTaskStateChangedData data) {
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_NOTIFICATION_GRANTED);
 
         Task taskNotificationGranted = new Task();

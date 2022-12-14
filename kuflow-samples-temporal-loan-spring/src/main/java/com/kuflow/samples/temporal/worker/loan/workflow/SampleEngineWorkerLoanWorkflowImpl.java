@@ -24,7 +24,7 @@ package com.kuflow.samples.temporal.worker.loan.workflow;
 
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.Task;
-import com.kuflow.rest.model.TasksDefinitionSummary;
+import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
@@ -158,7 +158,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private Task createTaskLoanApplication(WorkflowRequest workflowRequest) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_LOAN_APPLICATION);
 
         Task task = new Task();
@@ -191,7 +191,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         String firstName = taskLoanApplication.getElementValueAsString("firstName");
         String lastName = taskLoanApplication.getElementValueAsString("lastName");
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_APPROVE_LOAN);
 
         Task task = new Task();
@@ -222,7 +222,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private void createTaskNotificationGranted(WorkflowRequest workflowRequest, Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_NOTIFICATION_GRANTED);
 
         Task task = new Task();
@@ -246,7 +246,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private void createTaskNotificationRejection(WorkflowRequest workflowRequest, Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_NOTIFICATION_REJECTION);
 
         Task task = new Task();

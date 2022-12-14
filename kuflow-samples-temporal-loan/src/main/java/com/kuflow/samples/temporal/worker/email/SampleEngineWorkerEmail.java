@@ -194,16 +194,6 @@ public class SampleEngineWorkerEmail {
         return WorkflowClient.newInstance(service, options);
     }
 
-    //    @Bean
-    //    public WorkerFactory workerFactory(WorkflowClient workflowClient) {
-    //        return WorkerFactory.newInstance(workflowClient);
-    //    }
-    //
-    //    @Bean
-    //    public ActivityCompletionClient activityCompletionClient(WorkflowClient workflowClient) {
-    //        return workflowClient.newActivityCompletionClient();
-    //    }
-
     private static SslContext createSslContext(SampleEngineWorkerEmailProperties properties) {
         MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
 

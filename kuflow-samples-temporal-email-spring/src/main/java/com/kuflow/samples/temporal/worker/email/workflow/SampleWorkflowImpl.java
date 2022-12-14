@@ -26,7 +26,7 @@ import com.kuflow.rest.model.Log;
 import com.kuflow.rest.model.LogLevel;
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.Task;
-import com.kuflow.rest.model.TasksDefinitionSummary;
+import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.temporal.activity.email.EmailActivities;
 import com.kuflow.temporal.activity.email.model.Email;
 import com.kuflow.temporal.activity.email.model.SendMailRequest;
@@ -145,7 +145,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     private Task createTaskFillInfo(UUID processId) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TaskDefinitionCode.FILL_INFO.name());
 
         Task task = new Task();
@@ -180,7 +180,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     private void createAutomaticTaskSendEmail(UUID processId, Task infoTask) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        TasksDefinitionSummary tasksDefinition = new TasksDefinitionSummary();
+        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TaskDefinitionCode.SEND_EMAIL.name());
 
         Task task = new Task();
