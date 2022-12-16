@@ -114,9 +114,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         Process process = this.retrieveProcess(workflowRequest);
         if (loanAuthorized) {
-            this.createTaskNotificationGranted(workflowRequest, process);
+            this.createTaskNotificationGranted(process);
         } else {
-            this.createTaskNotificationRejection(workflowRequest, process);
+            this.createTaskNotificationRejection(process);
         }
 
         CompleteProcessResponse completeProcess = this.completeProcess(workflowRequest);
@@ -216,10 +216,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     /**
      * Create a notification task showing that the loan was granted.
      *
-     * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationGranted(WorkflowRequest workflowRequest, Process process) {
+    private void createTaskNotificationGranted(Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
@@ -227,7 +226,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         Task task = new Task();
         task.setId(taskId);
-        task.setProcessId(workflowRequest.getProcessId());
+        task.setProcessId(process.getId());
         task.setTaskDefinition(tasksDefinition);
         task.setOwner(process.getInitiator());
 
@@ -240,10 +239,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     /**
      * Create a notification task showing that the loan was rejected.
      *
-     * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationRejection(WorkflowRequest workflowRequest, Process process) {
+    private void createTaskNotificationRejection(Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
@@ -251,7 +249,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         Task task = new Task();
         task.setId(taskId);
-        task.setProcessId(workflowRequest.getProcessId());
+        task.setProcessId(process.getId());
         task.setTaskDefinition(tasksDefinition);
         task.setOwner(process.getInitiator());
 
@@ -262,12 +260,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     }
 
     private BigDecimal convertToEuros(String currency, String amount) {
-        BigDecimal amountEUR = new BigDecimal(amount != null ? amount : "0");
         if (currency.equals("EUR")) {
-            return amountEUR;
-        } else {
-            String amountText = this.currencyConversionActivities.convert(amountEUR.toPlainString(), currency, "EUR");
-            return new BigDecimal(amountText);
+            return new BigDecimal(amount);
         }
+
+        String amountConverted = this.currencyConversionActivities.convert(amount, currency, "EUR");
+        return new BigDecimal(amountConverted);
     }
 }

@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.rest.KuFlowRestClientBuilder;
-import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerEmailProperties.TemporalProperties.MutualTlsProperties;
+import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivitiesImpl;
 import com.kuflow.samples.temporal.worker.email.workflow.SampleEngineWorkerLoanWorkflowImpl;
@@ -59,12 +59,12 @@ import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
 
-public class SampleEngineWorkerEmail {
+public class SampleEngineWorkerLoan {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SampleEngineWorkerEmail.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SampleEngineWorkerLoan.class);
 
     public static void main(String[] args) {
-        SampleEngineWorkerEmailProperties properties = loadConfiguration();
+        SampleEngineWorkerLoanProperties properties = loadConfiguration();
 
         KuFlowRestClient kuFlowRestClient = kuFlowRestClient(properties);
 
@@ -90,7 +90,7 @@ public class SampleEngineWorkerEmail {
             """
 
             ----------------------------------------------------------
-            \tApplication 'SampleEngineWorkerEmail' is running!
+            \tApplication 'SampleEngineWorkerLoan' is running!
             ----------------------------------------------------------
             """
         );
@@ -104,8 +104,8 @@ public class SampleEngineWorkerEmail {
             );
     }
 
-    private static SampleEngineWorkerEmailProperties loadConfiguration() {
-        Constructor constructor = new Constructor(SampleEngineWorkerEmailProperties.class);
+    private static SampleEngineWorkerLoanProperties loadConfiguration() {
+        Constructor constructor = new Constructor(SampleEngineWorkerLoanProperties.class);
         constructor.setPropertyUtils(
             new PropertyUtils() {
                 @Override
@@ -127,6 +127,7 @@ public class SampleEngineWorkerEmail {
 
         loadConfigurationFile("/config/application.yaml", streams);
         loadConfigurationFile("/config/application-local.yaml", streams);
+        loadConfigurationFile("/config/application-local-sandbox.yaml", streams);
 
         try (InputStream inputStream = new SequenceInputStream(enumeration(streams))) {
             return yaml.load(inputStream);
@@ -137,7 +138,7 @@ public class SampleEngineWorkerEmail {
     }
 
     private static void loadConfigurationFile(String name, List<InputStream> streams) {
-        InputStream inputApplication = SampleEngineWorkerEmail.class.getResourceAsStream(name);
+        InputStream inputApplication = SampleEngineWorkerLoan.class.getResourceAsStream(name);
         if (inputApplication != null) {
             LOGGER.info("Loading configuration file {}", name);
             streams.add(inputApplication);
@@ -146,7 +147,7 @@ public class SampleEngineWorkerEmail {
         }
     }
 
-    private static KuFlowRestClient kuFlowRestClient(SampleEngineWorkerEmailProperties properties) {
+    private static KuFlowRestClient kuFlowRestClient(SampleEngineWorkerLoanProperties properties) {
         KuFlowRestClientBuilder builder = new KuFlowRestClientBuilder();
         builder.clientId(properties.getKuflow().getApi().getClientId());
         builder.clientSecret(properties.getKuflow().getApi().getClientSecret());
@@ -160,7 +161,7 @@ public class SampleEngineWorkerEmail {
     }
 
     public static WorkflowServiceStubs workflowServiceStubs(
-        SampleEngineWorkerEmailProperties properties,
+        SampleEngineWorkerLoanProperties properties,
         KuFlowRestClient kuFlowRestClient
     ) {
         WorkflowServiceStubsOptions.Builder builder = WorkflowServiceStubsOptions.newBuilder();
@@ -184,7 +185,7 @@ public class SampleEngineWorkerEmail {
     //        return new EncryptionPayloadCodec(payloadEncryptor);
     //    }
 
-    public static WorkflowClient workflowClient(SampleEngineWorkerEmailProperties properties, WorkflowServiceStubs service) {
+    public static WorkflowClient workflowClient(SampleEngineWorkerLoanProperties properties, WorkflowServiceStubs service) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
             .setNamespace(properties.getTemporal().getNamespace())
@@ -194,7 +195,7 @@ public class SampleEngineWorkerEmail {
         return WorkflowClient.newInstance(service, options);
     }
 
-    private static SslContext createSslContext(SampleEngineWorkerEmailProperties properties) {
+    private static SslContext createSslContext(SampleEngineWorkerLoanProperties properties) {
         MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
 
         return SslContextBuilder

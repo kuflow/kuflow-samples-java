@@ -22,7 +22,7 @@
  */
 package com.kuflow.samples.temporal.worker.email;
 
-public class SampleEngineWorkerEmailProperties {
+public class SampleEngineWorkerLoanProperties {
 
     private KuFlowProperties kuflow = new KuFlowProperties();
 
