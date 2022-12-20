@@ -12,7 +12,7 @@ KuFlow is an implementation language agnostic Cloud platform. This repository is
 
 ## Documentation
 
-Documentation on how to integrate with KuFlow using Java is available [here](https://docs.kuflow.com/developers/guides/java).
+Documentation on how to integrate with KuFlow using Java is available [here](https://docs.kuflow.com/developers).
 
 ## Contributing
 
