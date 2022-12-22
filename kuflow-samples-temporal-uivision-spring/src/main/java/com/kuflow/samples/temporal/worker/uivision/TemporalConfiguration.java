@@ -25,31 +25,23 @@ package com.kuflow.samples.temporal.worker.uivision;
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.samples.temporal.worker.uivision.SampleEngineWorkerUiVisionProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
-import com.kuflow.temporal.common.payload.codec.EncryptionPayloadCodec;
-import com.kuflow.temporal.common.payload.codec.encryption.PayloadEncryptor;
-import com.kuflow.temporal.common.payload.codec.encryption.PayloadEncryptors;
-import com.kuflow.temporal.common.payload.codec.store.SecretStore;
-import com.kuflow.temporal.common.payload.codec.store.SecretStores;
 import com.kuflow.temporal.common.ssl.SslContextBuilder;
 import com.kuflow.temporal.common.tracing.MDCContextPropagator;
+
+import java.util.List;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
 import io.temporal.client.ActivityCompletionClient;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
-import io.temporal.common.converter.CodecDataConverter;
-import io.temporal.common.converter.DefaultDataConverter;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions.Builder;
 import io.temporal.worker.WorkerFactory;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class TemporalConfiguration {
@@ -79,23 +71,11 @@ public class TemporalConfiguration {
     }
 
     @Bean
-    public EncryptionPayloadCodec encryptionPayloadCodec() {
-        String defaultSecretKeyId = "test-key-test-key-test-key-test!";
-        SecretKey secretKey = new SecretKeySpec(defaultSecretKeyId.getBytes(StandardCharsets.UTF_8), "AES");
-
-        SecretStore secretStore = SecretStores.memory(defaultSecretKeyId, Map.of(defaultSecretKeyId, secretKey));
-        PayloadEncryptor payloadEncryptor = PayloadEncryptors.aesGcm(secretStore);
-
-        return new EncryptionPayloadCodec(payloadEncryptor);
-    }
-
-    @Bean
-    public WorkflowClient workflowClient(WorkflowServiceStubs service, EncryptionPayloadCodec encryptionPayloadCodec) {
+    public WorkflowClient workflowClient(WorkflowServiceStubs service) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
             .setNamespace(this.sampleEngineWorkerUiVisionProperties.getTemporal().getNamespace())
             .setContextPropagators(List.of(new MDCContextPropagator()))
-            .setDataConverter(new CodecDataConverter(DefaultDataConverter.newDefaultInstance(), List.of(encryptionPayloadCodec)))
             .build();
 
         return WorkflowClient.newInstance(service, options);
