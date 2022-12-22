@@ -74,7 +74,7 @@
     <spring-boot.version>2.7.6</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>2.0.0-SNAPSHOT</kuflow.version>
+    <kuflow.version>2.0.0</kuflow.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 
