@@ -1,0 +1,36 @@
+{
+  "Name": "KuFlowScreenshot",
+  "CreationDate": "2022-12-21",
+  "Commands": [
+    {
+      "Command": "captureDesktopScreenshot",
+      "Target": "/tmp/kuflow_image.png",
+      "Value": "",
+      "Description": ""
+    },
+    {
+      "Command": "XRunAndWait",
+      "Target": "kuflowctl",
+      "Value": "--silent save-element-document --task-id=${!cmd_var1} --element-code=SCREENSHOT /tmp/kuflow_image.png",
+      "Description": ""
+    },
+    {
+      "Command": "store",
+      "Target": "${!xrun_exitcode}",
+      "Value": "result",
+      "Description": ""
+    },
+    {
+      "Command": "echo",
+      "Target": "\"Exit code: ${result}\"",
+      "Value": "",
+      "Description": ""
+    },
+    {
+      "Command": "assert",
+      "Target": "result",
+      "Value": "0",
+      "Description": ""
+    }
+  ]
+}

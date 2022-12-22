@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2021-present KuFlow S.L.
+  ~
+  ~ All rights reserved.
+  -->
+<configuration scan="true">
+  <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/kuflow-engine-samples-worker-loan.log}"/>
+
+  <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+  <logger name="ch.qos.logback" level="WARN" />
+  <logger name="com.sun" level="WARN" />
+  <logger name="org.apache" level="WARN" />
+  <logger name="org.springframework" level="WARN" />
+  <logger name="org.springframework.web" level="WARN" />
+  <logger name="org.springframework.cache" level="WARN" />
+  <logger name="sun.rmi" level="WARN" />
+  <logger name="sun.rmi.transport" level="WARN" />
+
+  <logger name="io.grpc.netty" level="INFO" />
+
+  <!-- https://logback.qos.ch/manual/configuration.html#shutdownHook and https://jira.qos.ch/browse/LOGBACK-1090 -->
+  <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook" />
+
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
+
+</configuration>
