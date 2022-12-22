@@ -174,17 +174,6 @@ public class SampleEngineWorkerLoan {
         return WorkflowServiceStubs.newServiceStubs(options);
     }
 
-    //    @Bean
-    //    public EncryptionPayloadCodec encryptionPayloadCodec() {
-    //        String defaultSecretKeyId = "test-key-test-key-test-key-test!";
-    //        SecretKey secretKey = new SecretKeySpec(defaultSecretKeyId.getBytes(StandardCharsets.UTF_8), "AES");
-    //
-    //        SecretStore secretStore = SecretStores.memory(defaultSecretKeyId, Map.of(defaultSecretKeyId, secretKey));
-    //        PayloadEncryptor payloadEncryptor = PayloadEncryptors.aesGcm(secretStore);
-    //
-    //        return new EncryptionPayloadCodec(payloadEncryptor);
-    //    }
-
     public static WorkflowClient workflowClient(SampleEngineWorkerLoanProperties properties, WorkflowServiceStubs service) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
