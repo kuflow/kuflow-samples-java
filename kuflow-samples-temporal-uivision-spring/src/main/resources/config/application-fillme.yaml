@@ -14,17 +14,29 @@ kuflow:
 
   activity:
     ui-vision:
+      # Browser with UI.VISION pluging.
+      # Example: /user/bin/google-chrome
       launch-command: FILL_ME
 
+      # A directory where the robot can set its logs.
+      # Example: /home/user/logs
       log-directory: FILL_ME
 
+      # Path to the UI.VISION autorun html
+      # Example: /home/user/ui.vision.html
+      # See in: kuflow-samples-temporal-uivision-spring/etc/autostarthtml/ui.vision.html
       auto-run-html: FILL_ME
 
+      # UI.Vision macro to run
+      # Example: KuFlowScreenshot.json
+      # see in: kuflow-samples-temporal-uivision-spring/etc/macro/KuFlowScreenshot.json
       macro: FILL_ME
 
+      # Close browser when the macro is completed.
       # Optional:
       # closeBrowser: true
 
+      # Close UI.Vision RPA when the macro is completed.
       # Optional:
       # close-rpa: true
 
