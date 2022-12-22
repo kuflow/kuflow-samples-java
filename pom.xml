@@ -48,6 +48,7 @@
     <module>kuflow-samples-temporal-loan</module>
     <module>kuflow-samples-temporal-loan-spring</module>
     <module>kuflow-samples-temporal-email-spring</module>
+    <module>kuflow-samples-temporal-uivision-spring</module>
   </modules>
 
   <properties>
@@ -73,7 +74,7 @@
     <spring-boot.version>2.7.6</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>2.0.0-RC4</kuflow.version>
+    <kuflow.version>2.0.0-SNAPSHOT</kuflow.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 
@@ -92,6 +93,11 @@
       <dependency>
         <groupId>com.kuflow</groupId>
         <artifactId>kuflow-temporal-activity-email</artifactId>
+        <version>${kuflow.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.kuflow</groupId>
+        <artifactId>kuflow-temporal-activity-uivision</artifactId>
         <version>${kuflow.version}</version>
       </dependency>
       <dependency>

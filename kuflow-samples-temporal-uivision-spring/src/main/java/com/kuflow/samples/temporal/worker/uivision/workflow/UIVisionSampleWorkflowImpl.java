@@ -99,6 +99,7 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
     private void createTaskRobotResults(WorkflowRequest workflowRequest) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
+        // Create task in KuFlow
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_ROBOT_RESULTS);
 
@@ -111,14 +112,19 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
         createTaskRequest.setTask(task);
         this.kuFlowSyncActivities.createTask(createTaskRequest);
 
+        // Claim task by the worker because is a valid candidate.
+        // We could also claim it by specifying the "owner" in the above creation call.
+        // We use the same application for the worker and for the robot.
         ClaimTaskRequest claimTaskRequest = new ClaimTaskRequest();
         claimTaskRequest.setTaskId(taskId);
         this.kuFlowSyncActivities.claimTask(claimTaskRequest);
 
+        // Executes the Temporal activity to run the robot.
         ExecuteUIVisionMacroRequest executeUIVisionMacroRequest = new ExecuteUIVisionMacroRequest();
         executeUIVisionMacroRequest.setTaskId(taskId);
         this.uiVisionActivities.executeUIVisionMacro(executeUIVisionMacroRequest);
 
+        // Complete the task.
         CompleteTaskRequest completeTaskRequest = new CompleteTaskRequest();
         completeTaskRequest.setTaskId(taskId);
         this.kuFlowSyncActivities.completeTask(completeTaskRequest);
