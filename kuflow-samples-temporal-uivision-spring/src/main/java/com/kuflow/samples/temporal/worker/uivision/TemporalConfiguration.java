@@ -27,12 +27,6 @@ import com.kuflow.samples.temporal.worker.uivision.SampleEngineWorkerUiVisionPro
 import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
 import com.kuflow.temporal.common.ssl.SslContextBuilder;
 import com.kuflow.temporal.common.tracing.MDCContextPropagator;
-
-import java.util.List;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
 import io.temporal.client.ActivityCompletionClient;
@@ -42,6 +36,9 @@ import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions.Builder;
 import io.temporal.worker.WorkerFactory;
+import java.util.List;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class TemporalConfiguration {
