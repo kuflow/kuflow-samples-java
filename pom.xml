@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.6</version>
+    <version>2.7.7</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -71,10 +71,10 @@
     <license-maven-plugin.version>4.1</license-maven-plugin.version>
 
     <!-- Spring dependencies -->
-    <spring-boot.version>2.7.6</spring-boot.version>
+    <spring-boot.version>2.7.7</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>2.0.0</kuflow.version>
+    <kuflow.version>2.1.0</kuflow.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 
@@ -134,6 +134,7 @@
           </dependencies>
           <executions>
             <execution>
+              <?m2e ignore?>
               <id>checkstyle-validation</id>
               <goals>
                 <goal>check</goal>
@@ -160,6 +161,8 @@
           </configuration>
           <executions>
             <execution>
+              <?m2e ignore?>
+              <id>prettier-validation</id>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -190,6 +193,8 @@
           </configuration>
           <executions>
             <execution>
+              <?m2e ignore?>
+              <id>license-validation</id>
               <goals>
                 <goal>check</goal>
               </goals>

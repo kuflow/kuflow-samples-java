@@ -27,18 +27,31 @@ import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerEmailPropertie
 import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
 import com.kuflow.temporal.common.ssl.SslContextBuilder;
 import com.kuflow.temporal.common.tracing.MDCContextPropagator;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
 import io.temporal.client.ActivityCompletionClient;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
+import io.temporal.common.converter.DataConverter;
+import io.temporal.common.converter.DefaultDataConverter;
+import io.temporal.common.converter.JacksonJsonPayloadConverter;
+import io.temporal.common.converter.PayloadConverter;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions.Builder;
 import io.temporal.worker.WorkerFactory;
-import java.util.Collections;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class TemporalConfiguration {
@@ -65,11 +78,30 @@ public class TemporalConfiguration {
     }
 
     @Bean
-    public WorkflowClient workflowClient(WorkflowServiceStubs service) {
+    public DataConverter dataConverter() {
+        // Customize Temporal's default Jackson object mapper to support unknown properties
+        ObjectMapper objectMapper = JacksonJsonPayloadConverter.newDefaultObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        List<PayloadConverter> converters = new LinkedList<>();
+        converters.addAll(
+            Arrays
+                .stream(DefaultDataConverter.STANDARD_PAYLOAD_CONVERTERS)
+                .filter(it -> !(it instanceof JacksonJsonPayloadConverter))
+                .toList()
+        );
+        converters.add(new JacksonJsonPayloadConverter(objectMapper));
+
+        return new DefaultDataConverter(converters.toArray(new PayloadConverter[0]));
+    }
+
+    @Bean
+    public WorkflowClient workflowClient(WorkflowServiceStubs service, DataConverter dataConverter) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
             .setNamespace(this.sampleEngineWorkerEmailProperties.getTemporal().getNamespace())
             .setContextPropagators(Collections.singletonList(new MDCContextPropagator()))
+            .setDataConverter(dataConverter)
             .build();
 
         return WorkflowClient.newInstance(service, options);

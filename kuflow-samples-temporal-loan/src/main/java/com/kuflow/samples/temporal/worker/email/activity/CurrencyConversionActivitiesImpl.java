@@ -46,8 +46,8 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
             toTransformed
         );
 
-        try {
-            String json = new Scanner(new URL(endpoint).openStream(), StandardCharsets.UTF_8).useDelimiter("\\A").next();
+        try (Scanner scanner = new Scanner(new URL(endpoint).openStream(), StandardCharsets.UTF_8).useDelimiter("\\A")) {
+            String json = scanner.next();
 
             Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
             Gson gson = new Gson();
