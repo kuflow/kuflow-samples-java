@@ -22,6 +22,8 @@
  */
 package com.kuflow.samples.temporal.worker.loan;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
@@ -53,10 +55,6 @@ import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -114,7 +112,11 @@ public class TemporalConfiguration {
     }
 
     @Bean
-    public WorkflowClient workflowClient(WorkflowServiceStubs service, DataConverter dataConverter, EncryptionPayloadCodec encryptionPayloadCodec) {
+    public WorkflowClient workflowClient(
+        WorkflowServiceStubs service,
+        DataConverter dataConverter,
+        EncryptionPayloadCodec encryptionPayloadCodec
+    ) {
         WorkflowClientOptions options = WorkflowClientOptions
             .newBuilder()
             .setNamespace(this.sampleEngineWorkerLoanProperties.getTemporal().getNamespace())
