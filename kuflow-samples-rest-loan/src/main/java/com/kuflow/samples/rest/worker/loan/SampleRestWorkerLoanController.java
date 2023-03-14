@@ -55,13 +55,13 @@ public class SampleRestWorkerLoanController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SampleRestWorkerLoanController.class);
 
-    private static final String TASK_LOAN_APPLICATION = "LOAN_APPLICATION";
+    private static final String TASK_CODE_APPROVE_LOAN = "TASK_APPROVE_LOAN";
 
-    private static final String TASK_APPROVE_LOAN = "APPROVE_LOAN";
+    private static final String TASK_CODE_LOAN_APPLICATION_FORM = "TASK_LOAN_APPLICATION";
 
-    private static final String TASK_NOTIFICATION_REJECTION = "NOTIFICATION_REJECTION";
+    private static final String TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED = "NOTIFICATION_GRANTED";
 
-    private static final String TASK_NOTIFICATION_GRANTED = "NOTIFICATION_GRANTED";
+    private static final String TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION = "NOTIFICATION_REJECTION";
 
     private final RestTemplate restTemplate;
 
@@ -94,10 +94,10 @@ public class SampleRestWorkerLoanController {
 
     private void handleEventTaskStateChanged(WebhookEventTaskStateChanged event) {
         WebhookEventTaskStateChangedData data = event.getData();
-        if (data.getTaskCode().equals(TASK_LOAN_APPLICATION) && TaskState.COMPLETED.equals(data.getTaskState())) {
+        if (data.getTaskCode().equals(TASK_CODE_LOAN_APPLICATION_FORM) && TaskState.COMPLETED.equals(data.getTaskState())) {
             this.handleTaskLoanApplication(data);
         }
-        if (data.getTaskCode().equals(TASK_APPROVE_LOAN) && TaskState.COMPLETED.equals(data.getTaskState())) {
+        if (data.getTaskCode().equals(TASK_CODE_APPROVE_LOAN) && TaskState.COMPLETED.equals(data.getTaskState())) {
             this.handleTaskApproveLoan(data);
         }
     }
@@ -105,13 +105,13 @@ public class SampleRestWorkerLoanController {
     private void handleTaskApproveLoan(WebhookEventTaskStateChangedData data) {
         Task taskApproveLoan = this.kuFlowRestClient.getTaskOperations().retrieveTask(data.getTaskId());
 
-        String authorizedField = taskApproveLoan.getElementValueAsString("authorized");
+        String authorizedField = taskApproveLoan.getElementValueAsString("APPROVAL");
 
         Task taskNotification;
-        if (authorizedField.equals("OK")) {
-            taskNotification = this.createTaskNotificationGranted(data);
+        if (authorizedField.equals("YES")) {
+            taskNotification = this.createTaskNotificationOfLoanGranted(data);
         } else {
-            taskNotification = this.createTaskNotificationRejection(data);
+            taskNotification = this.createTaskNotificationOfLoanGrantedRejection(data);
         }
 
         Process process = this.kuFlowRestClient.getProcessOperations().retrieveProcess(data.getProcessId());
@@ -124,15 +124,15 @@ public class SampleRestWorkerLoanController {
     private void handleTaskLoanApplication(WebhookEventTaskStateChangedData data) {
         Task taskLoanApplication = this.kuFlowRestClient.getTaskOperations().retrieveTask(data.getTaskId());
 
-        String currencyField = taskLoanApplication.getElementValueAsString("currency");
-        String amountField = taskLoanApplication.getElementValueAsString("amount");
+        String currencyField = taskLoanApplication.getElementValueAsString("CURRENCY");
+        String amountField = taskLoanApplication.getElementValueAsString("AMOUNT");
 
         BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
 
         if (amountEUR.compareTo(BigDecimal.valueOf(5000)) > 0) {
             this.createTaskApproveLoan(taskLoanApplication, amountEUR);
         } else {
-            Task taskNotification = this.createTaskNotificationGranted(data);
+            Task taskNotification = this.createTaskNotificationOfLoanGranted(data);
 
             Process process = this.kuFlowRestClient.getProcessOperations().retrieveProcess(data.getProcessId());
 
@@ -144,7 +144,7 @@ public class SampleRestWorkerLoanController {
 
     private void createTaskLoanApplication(WebhookEventProcessStateChangedData data) {
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_LOAN_APPLICATION);
+        tasksDefinition.setCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
         Task task = new Task();
         task.setProcessId(data.getProcessId());
@@ -154,24 +154,25 @@ public class SampleRestWorkerLoanController {
     }
 
     private void createTaskApproveLoan(Task taskLoanApplication, BigDecimal amountEUR) {
-        String firstName = taskLoanApplication.getElementValueAsString("firstName");
-        String lastName = taskLoanApplication.getElementValueAsString("lastName");
+        String firstName = taskLoanApplication.getElementValueAsString("FIRSTNAME");
+        String lastName = taskLoanApplication.getElementValueAsString("LASTNAME");
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_APPROVE_LOAN);
+        tasksDefinition.setCode(TASK_CODE_APPROVE_LOAN);
 
         Task taskApproveLoan = new Task();
         taskApproveLoan.setProcessId(taskLoanApplication.getProcessId());
         taskApproveLoan.setTaskDefinition(tasksDefinition);
-        taskApproveLoan.setElementValueAsString("name", firstName + " " + lastName);
-        taskApproveLoan.setElementValueAsString("amountRequested", amountEUR.toPlainString());
+        taskApproveLoan.setElementValueAsString("FIRSTNAME", firstName);
+        taskApproveLoan.setElementValueAsString("LASTNAME", lastName);
+        taskApproveLoan.setElementValueAsString("AMOUNT", amountEUR.toPlainString());
 
         this.kuFlowRestClient.getTaskOperations().createTask(taskApproveLoan);
     }
 
-    private Task createTaskNotificationRejection(WebhookEventTaskStateChangedData data) {
+    private Task createTaskNotificationOfLoanGrantedRejection(WebhookEventTaskStateChangedData data) {
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_NOTIFICATION_REJECTION);
+        tasksDefinition.setCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
 
         Task taskNotificationRejection = new Task();
         taskNotificationRejection.setProcessId(data.getProcessId());
@@ -180,9 +181,9 @@ public class SampleRestWorkerLoanController {
         return this.kuFlowRestClient.getTaskOperations().createTask(taskNotificationRejection);
     }
 
-    private Task createTaskNotificationGranted(WebhookEventTaskStateChangedData data) {
+    private Task createTaskNotificationOfLoanGranted(WebhookEventTaskStateChangedData data) {
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_NOTIFICATION_GRANTED);
+        tasksDefinition.setCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
 
         Task taskNotificationGranted = new Task();
         taskNotificationGranted.setProcessId(data.getProcessId());
