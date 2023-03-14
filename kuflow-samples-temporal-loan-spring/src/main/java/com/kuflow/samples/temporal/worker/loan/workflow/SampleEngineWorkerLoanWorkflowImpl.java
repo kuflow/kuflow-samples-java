@@ -153,7 +153,6 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return this.kuFlowSyncActivities.completeProcess(request);
     }
 
-
     private void updateProcessMetadata(Task taskLoanApplication) {
         String firstName = taskLoanApplication.getElementValueAsString("FIRSTNAME");
         String lastName = taskLoanApplication.getElementValueAsString("LASTNAME");
@@ -171,7 +170,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         this.kuFlowSyncActivities.saveProcessElement(saveLastNameMetadataRequest);
     }
 
-        /**
+    /**
      * Create a task in KuFlow to approve the loan due to doesn't meet the restrictions.
      *
      * @param taskLoanApplication task created to request a loan
