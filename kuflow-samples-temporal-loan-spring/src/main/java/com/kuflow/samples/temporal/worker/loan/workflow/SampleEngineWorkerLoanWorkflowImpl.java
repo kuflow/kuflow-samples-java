@@ -35,6 +35,7 @@ import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessResponse;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveTaskResponse;
+import com.kuflow.temporal.activity.kuflow.model.SaveProcessElementRequest;
 import com.kuflow.temporal.common.KuFlowGenerator;
 import com.kuflow.temporal.common.model.WorkflowRequest;
 import com.kuflow.temporal.common.model.WorkflowResponse;
@@ -50,13 +51,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     private static final Logger LOGGER = Workflow.getLogger(SampleEngineWorkerLoanWorkflowImpl.class);
 
-    private static final String TASK_LOAN_APPLICATION = "LOAN_APPLICATION";
+    private static final String TASK_CODE_APPROVE_LOAN = "TASK_APPROVE_LOAN";
 
-    private static final String TASK_APPROVE_LOAN = "APPROVE_LOAN";
+    private static final String TASK_CODE_LOAN_APPLICATION_FORM = "TASK_LOAN_APPLICATION";
 
-    private static final String TASK_NOTIFICATION_GRANTED = "NOTIFICATION_GRANTED";
+    private static final String TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED = "NOTIFICATION_GRANTED";
 
-    private static final String TASK_NOTIFICATION_REJECTION = "NOTIFICATION_REJECTION";
+    private static final String TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION = "NOTIFICATION_REJECTION";
 
     private final KuFlowSyncActivities kuFlowSyncActivities;
 
@@ -96,27 +97,30 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         this.kuflowGenerator = new KuFlowGenerator(workflowRequest.getProcessId());
 
-        Task taskLoanApplication = this.createTaskLoanApplication(workflowRequest);
+        Task taskLoanApplication = this.createTaskLoanApplicationForm(workflowRequest.getProcessId());
 
-        String currency = taskLoanApplication.getElementValueAsString("currency");
-        String amount = taskLoanApplication.getElementValueAsString("amount");
+        this.updateProcessMetadata(taskLoanApplication);
 
+        String currency = taskLoanApplication.getElementValueAsString("CURRENCY");
+        String amount = taskLoanApplication.getElementValueAsString("AMOUNT");
+
+        // Convert to euros
         BigDecimal amountEUR = this.convertToEuros(currency, amount);
 
         boolean loanAuthorized = true;
         if (amountEUR.compareTo(BigDecimal.valueOf(5_000)) > 0) {
             Task taskApproveLoan = this.createTaskApproveLoan(taskLoanApplication, amountEUR);
 
-            String authorized = taskApproveLoan.getElementValueAsString("authorized");
+            String approval = taskApproveLoan.getElementValueAsString("APPROVAL");
 
-            loanAuthorized = authorized.equals("OK");
+            loanAuthorized = approval.equals("YES");
         }
 
         Process process = this.retrieveProcess(workflowRequest);
         if (loanAuthorized) {
-            this.createTaskNotificationGranted(workflowRequest, process);
+            this.createTaskNotificationOfLoanGranted(workflowRequest, process);
         } else {
-            this.createTaskNotificationRejection(workflowRequest, process);
+            this.createTaskNotificationOfLoanGrantedRejection(workflowRequest, process);
         }
 
         CompleteProcessResponse completeProcess = this.completeProcess(workflowRequest);
@@ -149,22 +153,47 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return this.kuFlowSyncActivities.completeProcess(request);
     }
 
-    /**
-     * Create a task in KuFlow in order to collect the necessary information to request a loan.
+
+    private void updateProcessMetadata(Task taskLoanApplication) {
+        String firstName = taskLoanApplication.getElementValueAsString("FIRSTNAME");
+        String lastName = taskLoanApplication.getElementValueAsString("LASTNAME");
+
+        SaveProcessElementRequest saveFirstNameMetadataRequest = new SaveProcessElementRequest();
+        saveFirstNameMetadataRequest.setProcessId(taskLoanApplication.getProcessId());
+        saveFirstNameMetadataRequest.setElementDefinitionCode("FIRSTNAME");
+        saveFirstNameMetadataRequest.addElementValueAsString(firstName);
+        this.kuFlowSyncActivities.saveProcessElement(saveFirstNameMetadataRequest);
+
+        SaveProcessElementRequest saveLastNameMetadataRequest = new SaveProcessElementRequest();
+        saveLastNameMetadataRequest.setProcessId(taskLoanApplication.getProcessId());
+        saveLastNameMetadataRequest.setElementDefinitionCode("LASTNAME");
+        saveLastNameMetadataRequest.addElementValueAsString(lastName);
+        this.kuFlowSyncActivities.saveProcessElement(saveLastNameMetadataRequest);
+    }
+
+        /**
+     * Create a task in KuFlow to approve the loan due to doesn't meet the restrictions.
      *
-     * @param workflowRequest workflow request
+     * @param taskLoanApplication task created to request a loan
+     * @param amountEUR amount requested
      * @return task created
      */
-    private Task createTaskLoanApplication(WorkflowRequest workflowRequest) {
+    private Task createTaskApproveLoan(Task taskLoanApplication, BigDecimal amountEUR) {
+        String firstName = taskLoanApplication.getElementValueAsString("FIRSTNAME");
+        String lastName = taskLoanApplication.getElementValueAsString("LASTNAME");
+
         UUID taskId = this.kuflowGenerator.randomUUID();
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_LOAN_APPLICATION);
+        tasksDefinition.setCode(TASK_CODE_APPROVE_LOAN);
 
         Task task = new Task();
         task.setId(taskId);
-        task.setProcessId(workflowRequest.getProcessId());
+        task.setProcessId(taskLoanApplication.getProcessId());
         task.setTaskDefinition(tasksDefinition);
+        task.setElementValueAsString("FIRSTNAME", firstName);
+        task.setElementValueAsString("LASTNAME", lastName);
+        task.setElementValueAsString("AMOUNT", amountEUR.toPlainString());
 
         CreateTaskRequest createTaskRequest = new CreateTaskRequest();
         createTaskRequest.setTask(task);
@@ -179,27 +208,21 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     }
 
     /**
-     * Create a task in KuFlow to approve the loan due to doesn't meet the restrictions.
+     * Create a task in KuFlow in order to collect the necessary information to request a loan.
      *
-     * @param taskLoanApplication task created to request a loan
-     * @param amountEUR amount requested
+     * @param workflowRequest workflow request
      * @return task created
      */
-    private Task createTaskApproveLoan(Task taskLoanApplication, BigDecimal amountEUR) {
+    private Task createTaskLoanApplicationForm(UUID processId) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
-        String firstName = taskLoanApplication.getElementValueAsString("firstName");
-        String lastName = taskLoanApplication.getElementValueAsString("lastName");
-
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_APPROVE_LOAN);
+        tasksDefinition.setCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
         Task task = new Task();
         task.setId(taskId);
-        task.setProcessId(taskLoanApplication.getProcessId());
+        task.setProcessId(processId);
         task.setTaskDefinition(tasksDefinition);
-        task.setElementValueAsString("name", firstName + " " + lastName);
-        task.setElementValueAsString("amountRequested", amountEUR.toPlainString());
 
         CreateTaskRequest createTaskRequest = new CreateTaskRequest();
         createTaskRequest.setTask(task);
@@ -219,11 +242,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationGranted(WorkflowRequest workflowRequest, Process process) {
+    private void createTaskNotificationOfLoanGranted(WorkflowRequest workflowRequest, Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_NOTIFICATION_GRANTED);
+        tasksDefinition.setCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
 
         Task task = new Task();
         task.setId(taskId);
@@ -243,11 +266,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationRejection(WorkflowRequest workflowRequest, Process process) {
+    private void createTaskNotificationOfLoanGrantedRejection(WorkflowRequest workflowRequest, Process process) {
         UUID taskId = this.kuflowGenerator.randomUUID();
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_NOTIFICATION_REJECTION);
+        tasksDefinition.setCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
 
         Task task = new Task();
         task.setId(taskId);
@@ -262,12 +285,12 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     }
 
     private BigDecimal convertToEuros(String currency, String amount) {
-        BigDecimal amountEUR = new BigDecimal(amount != null ? amount : "0");
+        BigDecimal amountNumber = new BigDecimal(amount != null ? amount : "0");
         if (currency.equals("EUR")) {
-            return amountEUR;
-        } else {
-            String amountText = this.currencyConversionActivities.convert(amountEUR.toPlainString(), currency, "EUR");
-            return new BigDecimal(amountText);
+            return amountNumber;
         }
+
+        String amountText = this.currencyConversionActivities.convert(amountNumber.toPlainString(), currency, "EUR");
+        return new BigDecimal(amountText);
     }
 }
