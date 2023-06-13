@@ -20,17 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.kuflow.samples.temporal.worker.email;
+package com.kuflow.samples.temporal.worker.loan;
 
 import static java.util.Collections.enumeration;
 import static java.util.stream.Collectors.joining;
 
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.rest.KuFlowRestClientBuilder;
-import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
-import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivities;
-import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivitiesImpl;
-import com.kuflow.samples.temporal.worker.email.workflow.SampleEngineWorkerLoanWorkflowImpl;
+import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
+import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
+import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
+import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivitiesImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;

@@ -20,13 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.kuflow.samples.temporal.worker.email.workflow;
+package com.kuflow.samples.temporal.worker.loan.workflow;
 
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.rest.util.TaskUtils;
-import com.kuflow.samples.temporal.worker.email.activity.CurrencyConversionActivities;
+import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import com.kuflow.temporal.activity.kuflow.model.CompleteProcessRequest;
