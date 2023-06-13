@@ -27,6 +27,7 @@ import com.kuflow.rest.model.LogLevel;
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
+import com.kuflow.rest.util.TaskUtils;
 import com.kuflow.temporal.activity.email.EmailActivities;
 import com.kuflow.temporal.activity.email.model.Email;
 import com.kuflow.temporal.activity.email.model.SendMailRequest;
@@ -202,9 +203,9 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         // Get values from Info Task
         Email email = new Email();
         email.setTemplate("email");
-        email.setTo(infoTask.getElementValueAsString(ElementDefinitionCode.EMAIL_RECIPIENT.name()));
-        email.addVariables("subject", infoTask.getElementValueAsString(ElementDefinitionCode.EMAIL_SUBJECT.name()));
-        email.addVariables("body", infoTask.getElementValueAsString(ElementDefinitionCode.EMAIL_BODY.name()));
+        email.setTo(TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_RECIPIENT.name()));
+        email.addVariables("subject", TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_SUBJECT.name()));
+        email.addVariables("body", TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_BODY.name()));
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
         this.addLogInfoEntryTask(taskId, "Sending email to " + email.getTo());

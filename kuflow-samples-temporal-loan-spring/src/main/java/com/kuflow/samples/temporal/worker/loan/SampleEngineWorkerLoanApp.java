@@ -52,8 +52,7 @@ public class SampleEngineWorkerLoanApp implements CommandLineRunner {
         String[] profiles = ArrayUtils.isNotEmpty(env.getActiveProfiles()) ? env.getActiveProfiles() : env.getDefaultProfiles();
         LOGGER.info(
             """
-
-            ----------------------------------------------------------
+            \n----------------------------------------------------------
             \tApplication '{}' is running!
             \tProfile(s): \t{}
             ----------------------------------------------------------

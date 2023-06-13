@@ -88,8 +88,7 @@ public class SampleEngineWorkerLoan {
 
         LOGGER.info(
             """
-
-            ----------------------------------------------------------
+            \n----------------------------------------------------------
             \tApplication 'SampleEngineWorkerLoan' is running!
             ----------------------------------------------------------
             """
@@ -148,9 +147,10 @@ public class SampleEngineWorkerLoan {
     }
 
     private static KuFlowRestClient kuFlowRestClient(SampleEngineWorkerLoanProperties properties) {
-        KuFlowRestClientBuilder builder = new KuFlowRestClientBuilder();
-        builder.clientId(properties.getKuflow().getApi().getClientId());
-        builder.clientSecret(properties.getKuflow().getApi().getClientSecret());
+        KuFlowRestClientBuilder builder = new KuFlowRestClientBuilder()
+            .clientId(properties.getKuflow().getApi().getClientId())
+            .clientSecret(properties.getKuflow().getApi().getClientSecret());
+
         String endpoint = properties.getKuflow().getApi().getEndpoint();
         if (endpoint != null) {
             builder.endpoint(endpoint);
@@ -164,12 +164,12 @@ public class SampleEngineWorkerLoan {
         SampleEngineWorkerLoanProperties properties,
         KuFlowRestClient kuFlowRestClient
     ) {
-        WorkflowServiceStubsOptions.Builder builder = WorkflowServiceStubsOptions.newBuilder();
-        builder.setTarget(properties.getTemporal().getTarget());
-        builder.setSslContext(createSslContext(properties));
-        builder.addGrpcMetadataProvider(new AuthorizationGrpcMetadataProvider(new KuFlowAuthorizationTokenSupplier(kuFlowRestClient)));
-
-        WorkflowServiceStubsOptions options = builder.validateAndBuildWithDefaults();
+        WorkflowServiceStubsOptions options = WorkflowServiceStubsOptions
+            .newBuilder()
+            .setTarget(properties.getTemporal().getTarget())
+            .setSslContext(createSslContext(properties))
+            .addGrpcMetadataProvider(new AuthorizationGrpcMetadataProvider(new KuFlowAuthorizationTokenSupplier(kuFlowRestClient)))
+            .validateAndBuildWithDefaults();
 
         return WorkflowServiceStubs.newServiceStubs(options);
     }

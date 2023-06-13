@@ -34,6 +34,7 @@ import com.kuflow.rest.model.WebhookEventProcessStateChanged;
 import com.kuflow.rest.model.WebhookEventProcessStateChangedData;
 import com.kuflow.rest.model.WebhookEventTaskStateChanged;
 import com.kuflow.rest.model.WebhookEventTaskStateChangedData;
+import com.kuflow.rest.util.TaskUtils;
 import com.kuflow.samples.rest.worker.loan.util.CastUtils;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -55,9 +56,9 @@ public class SampleRestWorkerLoanController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SampleRestWorkerLoanController.class);
 
-    private static final String TASK_CODE_APPROVE_LOAN = "TASK_APPROVE_LOAN";
+    private static final String TASK_CODE_APPROVE_LOAN = "APPROVE_LOAN";
 
-    private static final String TASK_CODE_LOAN_APPLICATION_FORM = "TASK_LOAN_APPLICATION";
+    private static final String TASK_CODE_LOAN_APPLICATION_FORM = "LOAN_APPLICATION";
 
     private static final String TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED = "NOTIFICATION_GRANTED";
 
@@ -105,7 +106,7 @@ public class SampleRestWorkerLoanController {
     private void handleTaskApproveLoan(WebhookEventTaskStateChangedData data) {
         Task taskApproveLoan = this.kuFlowRestClient.getTaskOperations().retrieveTask(data.getTaskId());
 
-        String authorizedField = taskApproveLoan.getElementValueAsString("APPROVAL");
+        String authorizedField = TaskUtils.getElementValueAsString(taskApproveLoan, "APPROVAL");
 
         Task taskNotification;
         if (authorizedField.equals("YES")) {
@@ -124,8 +125,8 @@ public class SampleRestWorkerLoanController {
     private void handleTaskLoanApplication(WebhookEventTaskStateChangedData data) {
         Task taskLoanApplication = this.kuFlowRestClient.getTaskOperations().retrieveTask(data.getTaskId());
 
-        String currencyField = taskLoanApplication.getElementValueAsString("CURRENCY");
-        String amountField = taskLoanApplication.getElementValueAsString("AMOUNT");
+        String currencyField = TaskUtils.getElementValueAsString(taskLoanApplication, "CURRENCY");
+        String amountField = TaskUtils.getElementValueAsString(taskLoanApplication, "AMOUNT");
 
         BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
 
@@ -154,8 +155,8 @@ public class SampleRestWorkerLoanController {
     }
 
     private void createTaskApproveLoan(Task taskLoanApplication, BigDecimal amountEUR) {
-        String firstName = taskLoanApplication.getElementValueAsString("FIRSTNAME");
-        String lastName = taskLoanApplication.getElementValueAsString("LASTNAME");
+        String firstName = TaskUtils.getElementValueAsString(taskLoanApplication, "FIRST_NAME");
+        String lastName = TaskUtils.getElementValueAsString(taskLoanApplication, "LAST_NAME");
 
         TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
         tasksDefinition.setCode(TASK_CODE_APPROVE_LOAN);
@@ -163,9 +164,9 @@ public class SampleRestWorkerLoanController {
         Task taskApproveLoan = new Task();
         taskApproveLoan.setProcessId(taskLoanApplication.getProcessId());
         taskApproveLoan.setTaskDefinition(tasksDefinition);
-        taskApproveLoan.setElementValueAsString("FIRSTNAME", firstName);
-        taskApproveLoan.setElementValueAsString("LASTNAME", lastName);
-        taskApproveLoan.setElementValueAsString("AMOUNT", amountEUR.toPlainString());
+        TaskUtils.setElementValueAsString(taskApproveLoan, "FIRST_NAME", firstName);
+        TaskUtils.setElementValueAsString(taskApproveLoan, "LAST_NAME", lastName);
+        TaskUtils.setElementValueAsString(taskApproveLoan, "AMOUNT", amountEUR.toPlainString());
 
         this.kuFlowRestClient.getTaskOperations().createTask(taskApproveLoan);
     }
