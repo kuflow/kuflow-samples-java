@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.rest.KuFlowRestClientBuilder;
+import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.KuFlowApiProperties;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
@@ -35,23 +36,16 @@ import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivitiesImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivitiesImpl;
-import com.kuflow.temporal.common.authorization.KuFlowAuthorizationTokenSupplier;
+import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import com.kuflow.temporal.common.ssl.SslContextBuilder;
-import com.kuflow.temporal.common.tracing.MDCContextPropagator;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.temporal.authorization.AuthorizationGrpcMetadataProvider;
-import io.temporal.client.WorkflowClient;
-import io.temporal.client.WorkflowClientOptions;
-import io.temporal.serviceclient.WorkflowServiceStubs;
-import io.temporal.serviceclient.WorkflowServiceStubsOptions;
-import io.temporal.worker.Worker;
-import io.temporal.worker.WorkerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -66,25 +60,45 @@ public class SampleEngineWorkerLoan {
     public static void main(String[] args) {
         SampleEngineWorkerLoanProperties properties = loadConfiguration();
 
-        KuFlowRestClient kuFlowRestClient = kuFlowRestClient(properties);
+        KuFlowApiProperties apiProperties = properties.getKuflow().getApi();
+        KuFlowRestClient kuFlowRestClient = new KuFlowRestClientBuilder()
+            .clientId(apiProperties.getClientId())
+            .clientSecret(apiProperties.getClientSecret())
+            .endpoint(apiProperties.getEndpoint())
+            .allowInsecureConnection(apiProperties.getEndpoint() != null && apiProperties.getEndpoint().startsWith("http://"))
+            .buildClient();
 
-        WorkflowServiceStubs service = workflowServiceStubs(properties, kuFlowRestClient);
+        KuFlowTemporalConnection kuFlowTemporalConnection = KuFlowTemporalConnection
+            .instance(kuFlowRestClient)
+            .configureWorkflowServiceStubs(builder -> {
+                MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
+                SslContext sslContext = SslContextBuilder
+                    .builder()
+                    .withCa(mutualTls.getCa())
+                    .withCaData(mutualTls.getCaData())
+                    .withCert(mutualTls.getCert())
+                    .withCertData(mutualTls.getCertData())
+                    .withKey(mutualTls.getKey())
+                    .withKeyData(mutualTls.getKeyData())
+                    .build();
 
-        WorkflowClient client = workflowClient(properties, service);
+                builder.setTarget(properties.getTemporal().getTarget()).setSslContext(sslContext);
+            })
+            .configureWorkflowClient(builder -> builder.setNamespace(properties.getTemporal().getNamespace()))
+            .configureWorker(builder -> {
+                KuFlowSyncActivities kuFlowSyncActivities = new KuFlowSyncActivitiesImpl(kuFlowRestClient);
+                KuFlowAsyncActivities kuFlowAsyncActivities = new KuFlowAsyncActivitiesImpl(kuFlowRestClient);
+                CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
 
-        WorkerFactory factory = WorkerFactory.newInstance(client);
+                builder
+                    .withTaskQueue(properties.getTemporal().getKuflowQueue())
+                    .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
+                    .withActivitiesImplementations(kuFlowSyncActivities)
+                    .withActivitiesImplementations(kuFlowAsyncActivities)
+                    .withActivitiesImplementations(conversionActivities);
+            });
 
-        KuFlowSyncActivities kuFlowSyncActivities = new KuFlowSyncActivitiesImpl(kuFlowRestClient);
-        KuFlowAsyncActivities kuFlowAsyncActivities = new KuFlowAsyncActivitiesImpl(kuFlowRestClient);
-        CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
-
-        Worker worker = factory.newWorker(properties.getTemporal().getKuflowQueue());
-        worker.registerWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class);
-        worker.registerActivitiesImplementations(kuFlowSyncActivities);
-        worker.registerActivitiesImplementations(kuFlowAsyncActivities);
-        worker.registerActivitiesImplementations(conversionActivities);
-
-        factory.start();
+        kuFlowTemporalConnection.start();
 
         LOGGER.info(
             """
@@ -97,7 +111,7 @@ public class SampleEngineWorkerLoan {
             .getRuntime()
             .addShutdownHook(
                 new Thread(() -> {
-                    factory.shutdown();
+                    kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
                     LOGGER.info("Shutting down ...");
                 })
             );
@@ -144,57 +158,5 @@ public class SampleEngineWorkerLoan {
         } else {
             LOGGER.warn("Configuration file {} not found", name);
         }
-    }
-
-    private static KuFlowRestClient kuFlowRestClient(SampleEngineWorkerLoanProperties properties) {
-        KuFlowRestClientBuilder builder = new KuFlowRestClientBuilder()
-            .clientId(properties.getKuflow().getApi().getClientId())
-            .clientSecret(properties.getKuflow().getApi().getClientSecret());
-
-        String endpoint = properties.getKuflow().getApi().getEndpoint();
-        if (endpoint != null) {
-            builder.endpoint(endpoint);
-            builder.allowInsecureConnection(endpoint.startsWith("http://"));
-        }
-
-        return builder.buildClient();
-    }
-
-    public static WorkflowServiceStubs workflowServiceStubs(
-        SampleEngineWorkerLoanProperties properties,
-        KuFlowRestClient kuFlowRestClient
-    ) {
-        WorkflowServiceStubsOptions options = WorkflowServiceStubsOptions
-            .newBuilder()
-            .setTarget(properties.getTemporal().getTarget())
-            .setSslContext(createSslContext(properties))
-            .addGrpcMetadataProvider(new AuthorizationGrpcMetadataProvider(new KuFlowAuthorizationTokenSupplier(kuFlowRestClient)))
-            .validateAndBuildWithDefaults();
-
-        return WorkflowServiceStubs.newServiceStubs(options);
-    }
-
-    public static WorkflowClient workflowClient(SampleEngineWorkerLoanProperties properties, WorkflowServiceStubs service) {
-        WorkflowClientOptions options = WorkflowClientOptions
-            .newBuilder()
-            .setNamespace(properties.getTemporal().getNamespace())
-            .setContextPropagators(List.of(new MDCContextPropagator()))
-            .build();
-
-        return WorkflowClient.newInstance(service, options);
-    }
-
-    private static SslContext createSslContext(SampleEngineWorkerLoanProperties properties) {
-        MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
-
-        return SslContextBuilder
-            .builder()
-            .withCa(mutualTls.getCa())
-            .withCaData(mutualTls.getCaData())
-            .withCert(mutualTls.getCert())
-            .withCertData(mutualTls.getCertData())
-            .withKey(mutualTls.getKey())
-            .withKeyData(mutualTls.getKeyData())
-            .build();
     }
 }

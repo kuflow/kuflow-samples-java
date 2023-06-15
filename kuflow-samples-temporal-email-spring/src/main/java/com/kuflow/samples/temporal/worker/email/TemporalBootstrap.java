@@ -26,8 +26,7 @@ import com.kuflow.samples.temporal.worker.email.workflow.SampleWorkflowImpl;
 import com.kuflow.temporal.activity.email.EmailActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
-import io.temporal.worker.Worker;
-import io.temporal.worker.WorkerFactory;
+import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemporalBootstrap.class);
 
-    private final WorkerFactory factory;
+    private final KuFlowTemporalConnection kuFlowTemporalConnection;
 
     private final KuFlowSyncActivities kuFlowSyncActivities;
 
@@ -51,17 +50,17 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private final SampleEngineWorkerEmailProperties sampleEngineWorkerEmailProperties;
 
     public TemporalBootstrap(
-        SampleEngineWorkerEmailProperties sampleEngineWorkerEmailProperties,
-        WorkerFactory factory,
+        KuFlowTemporalConnection kuFlowTemporalConnection,
         KuFlowSyncActivities kuFlowSyncActivities,
         KuFlowAsyncActivities kuFlowAsyncActivities,
-        EmailActivities emailActivities
+        EmailActivities emailActivities,
+        SampleEngineWorkerEmailProperties sampleEngineWorkerEmailProperties
     ) {
-        this.sampleEngineWorkerEmailProperties = sampleEngineWorkerEmailProperties;
-        this.factory = factory;
+        this.kuFlowTemporalConnection = kuFlowTemporalConnection;
         this.kuFlowSyncActivities = kuFlowSyncActivities;
         this.kuFlowAsyncActivities = kuFlowAsyncActivities;
         this.emailActivities = emailActivities;
+        this.sampleEngineWorkerEmailProperties = sampleEngineWorkerEmailProperties;
     }
 
     @Override
@@ -72,18 +71,20 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() {
-        this.factory.shutdown();
-        this.factory.awaitTermination(1, TimeUnit.MINUTES);
+        this.kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
         LOGGER.info("Temporal connection shutdown");
     }
 
     private void startWorkers() {
-        Worker worker = this.factory.newWorker(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue());
-        worker.registerWorkflowImplementationTypes(SampleWorkflowImpl.class);
-        worker.registerActivitiesImplementations(this.kuFlowSyncActivities);
-        worker.registerActivitiesImplementations(this.kuFlowAsyncActivities);
-        worker.registerActivitiesImplementations(this.emailActivities);
+        this.kuFlowTemporalConnection.configureWorker(builder ->
+                builder
+                    .withTaskQueue(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue())
+                    .withWorkflowImplementationTypes(SampleWorkflowImpl.class)
+                    .withActivitiesImplementations(this.kuFlowSyncActivities)
+                    .withActivitiesImplementations(this.kuFlowAsyncActivities)
+                    .withActivitiesImplementations(this.emailActivities)
+            );
 
-        this.factory.start();
+        this.kuFlowTemporalConnection.start();
     }
 }
