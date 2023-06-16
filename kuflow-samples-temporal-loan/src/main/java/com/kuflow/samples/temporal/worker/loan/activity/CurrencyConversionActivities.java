@@ -24,7 +24,7 @@ package com.kuflow.samples.temporal.worker.loan.activity;
 
 import io.temporal.activity.ActivityInterface;
 
-@ActivityInterface
+@ActivityInterface(namePrefix = "Currency_")
 public interface CurrencyConversionActivities {
     String convert(String amountText, String from, String to);
 }

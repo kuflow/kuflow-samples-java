@@ -46,10 +46,3 @@ feign:
   autoconfiguration:
     jackson:
       enabled: true
-
-application:
-  temporal:
-
-    # NOTE that the endpoint is the KUFLOW LIVE environment for
-    # the KUFLOW GRPC TEMPORAL API.
-    target: engine.kuflow.com:443

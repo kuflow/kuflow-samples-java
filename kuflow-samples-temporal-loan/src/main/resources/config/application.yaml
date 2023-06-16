@@ -1,5 +1,7 @@
 kuflow:
   api:
+    # API endpoint (default: https://api.kuflow.com).
+    # endpoint:
 
     # ID of the APPLICATION configured in KUFLOW.
     # Get it in "Application details" in the Kuflow APP.
@@ -10,10 +12,9 @@ kuflow:
     client-secret: FILL_ME
 
 temporal:
-
   # NOTE that the endpoint is the KUFLOW LIVE environment for
-  # the KUFLOW GRPC TEMPORAL API.
-  target: engine.kuflow.com:443
+  # the KUFLOW GRPC TEMPORAL API (default: engine.kuflow.com:443).
+  # target:
 
   # Temporal Namespace. Get it in "Application details" in the KUFLOW APP.
   namespace: FILL_ME

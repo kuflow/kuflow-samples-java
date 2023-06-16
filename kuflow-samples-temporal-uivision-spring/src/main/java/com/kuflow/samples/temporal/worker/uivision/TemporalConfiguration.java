@@ -120,11 +120,11 @@ public class TemporalConfiguration {
 
         return SslContextBuilder
             .builder()
-            .withCa(mutualTls.getCa())
+            .withCaFile(mutualTls.getCaFile())
             .withCaData(mutualTls.getCaData())
-            .withCert(mutualTls.getCert())
+            .withCertFile(mutualTls.getCertFile())
             .withCertData(mutualTls.getCertData())
-            .withKey(mutualTls.getKey())
+            .withKeyFile(mutualTls.getKeyFile())
             .withKeyData(mutualTls.getKeyData())
             .build();
     }

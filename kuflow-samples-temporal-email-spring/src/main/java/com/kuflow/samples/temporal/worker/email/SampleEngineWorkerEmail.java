@@ -53,8 +53,7 @@ public class SampleEngineWorkerEmail implements CommandLineRunner {
 
         LOGGER.info(
             """
-
-            ----------------------------------------------------------
+            \n----------------------------------------------------------
             \tApplication '{}' is running!
             \tProfile(s): \t{}
             ----------------------------------------------------------
