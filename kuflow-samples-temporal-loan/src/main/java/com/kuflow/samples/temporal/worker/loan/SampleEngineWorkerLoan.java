@@ -74,11 +74,11 @@ public class SampleEngineWorkerLoan {
                 MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
                 SslContext sslContext = SslContextBuilder
                     .builder()
-                    .withCa(mutualTls.getCa())
+                    .withCaFile(mutualTls.getCaFile())
                     .withCaData(mutualTls.getCaData())
-                    .withCert(mutualTls.getCert())
+                    .withCertFile(mutualTls.getCertFile())
                     .withCertData(mutualTls.getCertData())
-                    .withKey(mutualTls.getKey())
+                    .withKeyFile(mutualTls.getKey())
                     .withKeyData(mutualTls.getKeyData())
                     .build();
 

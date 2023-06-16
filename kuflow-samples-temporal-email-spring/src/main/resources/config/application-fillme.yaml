@@ -4,6 +4,8 @@
 
 kuflow:
   api:
+    # API endpoint (default: https://api.kuflow.com).
+    # endpoint:
 
     # ID of the APPLICATION configured in KUFLOW.
     # Get it in "Application details" in the Kuflow APP.
@@ -15,6 +17,9 @@ kuflow:
 
 application:
   temporal:
+    # NOTE that the endpoint is the KUFLOW LIVE environment for
+    # the KUFLOW GRPC TEMPORAL API (default: engine.kuflow.com:443).
+    # target:
 
     # Temporal Namespace. Get it in "Application details" in the KUFLOW APP.
     namespace: FILL_ME
@@ -31,25 +36,7 @@ application:
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        ...
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
@@ -64,25 +51,7 @@ application:
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        ...
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
@@ -94,29 +63,7 @@ application:
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
-        fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
+        ...
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_
         fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_fill_me_

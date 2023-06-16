@@ -17,9 +17,3 @@ spring:
       - "optional:classpath:config/application-local.yaml"
   main:
     web-application-type: none
-
-application:
-  temporal:
-    # NOTE that the endpoint is the KUFLOW LIVE environment for
-    # the KUFLOW GRPC TEMPORAL API.
-    target: engine.kuflow.com:443

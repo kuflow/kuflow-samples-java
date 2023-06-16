@@ -169,24 +169,24 @@ public class SampleEngineWorkerUiVisionProperties {
 
         public static final class MutualTlsProperties {
 
-            private String ca;
+            private String caFile;
 
             private String caData;
 
-            private String cert;
+            private String certFile;
 
             private String certData;
 
-            private String key;
+            private String keyFile;
 
             private String keyData;
 
-            public String getCa() {
-                return this.ca;
+            public String getCaFile() {
+                return this.caFile;
             }
 
-            public void setCa(String ca) {
-                this.ca = ca;
+            public void setCaFile(String caFile) {
+                this.caFile = caFile;
             }
 
             public String getCaData() {
@@ -197,12 +197,12 @@ public class SampleEngineWorkerUiVisionProperties {
                 this.caData = caData;
             }
 
-            public String getCert() {
-                return this.cert;
+            public String getCertFile() {
+                return this.certFile;
             }
 
-            public void setCert(String cert) {
-                this.cert = cert;
+            public void setCertFile(String certFile) {
+                this.certFile = certFile;
             }
 
             public String getCertData() {
@@ -213,12 +213,12 @@ public class SampleEngineWorkerUiVisionProperties {
                 this.certData = certData;
             }
 
-            public String getKey() {
-                return this.key;
+            public String getKeyFile() {
+                return this.keyFile;
             }
 
-            public void setKey(String key) {
-                this.key = key;
+            public void setKeyFile(String keyFile) {
+                this.keyFile = keyFile;
             }
 
             public String getKeyData() {

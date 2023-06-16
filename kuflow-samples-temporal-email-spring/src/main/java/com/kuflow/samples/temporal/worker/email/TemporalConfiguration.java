@@ -53,11 +53,11 @@ public class TemporalConfiguration {
             .configureWorkflowServiceStubs(builder -> {
                 SslContext sslContext = SslContextBuilder
                     .builder()
-                    .withCa(mutualTlsProperties.getCa())
+                    .withCaFile(mutualTlsProperties.getCaFile())
                     .withCaData(mutualTlsProperties.getCaData())
-                    .withCert(mutualTlsProperties.getCert())
+                    .withCertFile(mutualTlsProperties.getCertFile())
                     .withCertData(mutualTlsProperties.getCertData())
-                    .withKey(mutualTlsProperties.getKey())
+                    .withKeyFile(mutualTlsProperties.getKeyFile())
                     .withKeyData(mutualTlsProperties.getKeyData())
                     .build();
 

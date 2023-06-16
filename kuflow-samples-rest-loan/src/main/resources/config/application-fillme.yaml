@@ -4,6 +4,8 @@
 
 kuflow:
   api:
+    # API endpoint (default: https://api.kuflow.com).
+    # endpoint:
 
     # ID of the APPLICATION configured in KUFLOW.
     # Get it in "Application details" in the Kuflow APP.

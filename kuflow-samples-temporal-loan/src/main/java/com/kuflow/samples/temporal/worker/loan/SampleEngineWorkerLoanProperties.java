@@ -134,11 +134,11 @@ public class SampleEngineWorkerLoanProperties {
 
         public static final class MutualTlsProperties {
 
-            private String ca;
+            private String caFile;
 
             private String caData;
 
-            private String cert;
+            private String certFile;
 
             private String certData;
 
@@ -146,12 +146,12 @@ public class SampleEngineWorkerLoanProperties {
 
             private String keyData;
 
-            public String getCa() {
-                return this.ca;
+            public String getCaFile() {
+                return this.caFile;
             }
 
-            public void setCa(String ca) {
-                this.ca = ca;
+            public void setCaFile(String caFile) {
+                this.caFile = caFile;
             }
 
             public String getCaData() {
@@ -162,12 +162,12 @@ public class SampleEngineWorkerLoanProperties {
                 this.caData = caData;
             }
 
-            public String getCert() {
-                return this.cert;
+            public String getCertFile() {
+                return this.certFile;
             }
 
-            public void setCert(String cert) {
-                this.cert = cert;
+            public void setCertFile(String certFile) {
+                this.certFile = certFile;
             }
 
             public String getCertData() {
