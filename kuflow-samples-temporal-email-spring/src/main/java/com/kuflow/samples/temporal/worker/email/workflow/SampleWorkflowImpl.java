@@ -24,7 +24,6 @@ package com.kuflow.samples.temporal.worker.email.workflow;
 
 import com.kuflow.rest.model.Log;
 import com.kuflow.rest.model.LogLevel;
-import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.rest.util.TaskUtils;
@@ -35,8 +34,6 @@ import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import com.kuflow.temporal.activity.kuflow.model.AppendTaskLogRequest;
 import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessResponse;
 import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveTaskRequest;
@@ -105,9 +102,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
         this.createAutomaticTaskSendEmail(processId, taskFillInfo);
 
-        Process process = this.completeProcess(processId);
-
-        return this.completeWorkflow(process);
+        return this.completeWorkflow(workflowRequest);
     }
 
     /**
@@ -115,26 +110,11 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * @param process process
      * @return the workflow response
      */
-    private WorkflowResponse completeWorkflow(Process process) {
+    private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
         WorkflowResponse workflowResponse = new WorkflowResponse();
-        workflowResponse.setMessage("Completed process " + process.getId());
+        workflowResponse.setMessage("Completed process " + workflowRequest.getProcessId());
 
         return workflowResponse;
-    }
-
-    /**
-     * Complete the process
-     *
-     * @param processId process identifier
-     * @return The process completed
-     */
-    private Process completeProcess(UUID processId) {
-        CompleteProcessRequest request = new CompleteProcessRequest();
-        request.setProcessId(processId);
-
-        CompleteProcessResponse response = this.kuFlowSyncActivities.completeProcess(request);
-
-        return response.getProcess();
     }
 
     /**

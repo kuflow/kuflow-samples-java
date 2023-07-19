@@ -29,8 +29,6 @@ import com.kuflow.rest.util.TaskUtils;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessResponse;
 import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessResponse;
@@ -115,7 +113,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
             String approval = TaskUtils.getElementValueAsString(taskApproveLoan, "APPROVAL");
 
-            loanAuthorized = approval.equals("YES");
+            loanAuthorized = "YES".equals(approval);
         }
 
         Process process = this.retrieveProcess(workflowRequest);
@@ -125,11 +123,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
             this.createTaskNotificationOfLoanGrantedRejection(workflowRequest, process);
         }
 
-        CompleteProcessResponse completeProcess = this.completeProcess(workflowRequest);
-
         LOGGER.info("Finished loan process {}", workflowRequest.getProcessId());
 
-        return this.completeWorkflow(completeProcess);
+        return this.completeWorkflow(workflowRequest);
     }
 
     private Process retrieveProcess(WorkflowRequest workflowRequest) {
@@ -141,18 +137,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return response.getProcess();
     }
 
-    private WorkflowResponse completeWorkflow(CompleteProcessResponse completeProcess) {
+    private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
         WorkflowResponse workflowResponse = new WorkflowResponse();
-        workflowResponse.setMessage("Complete process " + completeProcess.getProcess().getId());
+        workflowResponse.setMessage("Complete process " + workflowRequest.getProcessId());
 
         return workflowResponse;
-    }
-
-    private CompleteProcessResponse completeProcess(WorkflowRequest workflowRequest) {
-        CompleteProcessRequest request = new CompleteProcessRequest();
-        request.setProcessId(workflowRequest.getProcessId());
-
-        return this.kuFlowSyncActivities.completeProcess(request);
     }
 
     private void updateProcessMetadata(Task taskLoanApplication) {
@@ -288,7 +277,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     private BigDecimal convertToEuros(String currency, String amount) {
         BigDecimal amountNumber = new BigDecimal(amount != null ? amount : "0");
-        if (currency.equals("EUR")) {
+        if ("EUR".equals(currency)) {
             return amountNumber;
         }
 
