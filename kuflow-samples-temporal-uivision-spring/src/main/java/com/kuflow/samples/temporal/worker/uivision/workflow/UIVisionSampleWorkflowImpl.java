@@ -26,8 +26,6 @@ import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteProcessResponse;
 import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
 import com.kuflow.temporal.activity.uivision.UIVisionActivities;
@@ -75,25 +73,16 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
         this.createTaskRobotResults(workflowRequest);
 
-        CompleteProcessResponse completeProcess = this.completeProcess(workflowRequest);
-
         LOGGER.info("UiVision process finished. {}", workflowRequest.getProcessId());
 
-        return this.completeWorkflow(completeProcess);
+        return this.completeWorkflow(workflowRequest);
     }
 
-    private WorkflowResponse completeWorkflow(CompleteProcessResponse completeProcess) {
+    private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
         WorkflowResponse workflowResponse = new WorkflowResponse();
-        workflowResponse.setMessage("Complete process " + completeProcess.getProcess().getId());
+        workflowResponse.setMessage("Complete process " + workflowRequest.getPayloads());
 
         return workflowResponse;
-    }
-
-    private CompleteProcessResponse completeProcess(WorkflowRequest workflowRequest) {
-        CompleteProcessRequest request = new CompleteProcessRequest();
-        request.setProcessId(workflowRequest.getProcessId());
-
-        return this.kuFlowSyncActivities.completeProcess(request);
     }
 
     private void createTaskRobotResults(WorkflowRequest workflowRequest) {

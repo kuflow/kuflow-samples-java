@@ -23,6 +23,8 @@
 package com.kuflow.samples.rest.worker.loan;
 
 import com.kuflow.rest.KuFlowRestClient;
+import com.kuflow.rest.model.DefaultErrorException;
+import com.kuflow.rest.model.PrincipalType;
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.ProcessState;
 import com.kuflow.rest.model.Task;
@@ -43,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,10 +82,26 @@ public class SampleRestWorkerLoanController {
 
         WebhookEvent event = this.kuFlowRestClient.parseWebhookEvent(payload);
 
-        if (event instanceof WebhookEventProcessStateChanged) {
-            this.handleEventProcessStateChanged(CastUtils.cast(event));
-        } else if (event instanceof WebhookEventTaskStateChanged) {
-            this.handleEventTaskStateChanged(CastUtils.cast(event));
+        try {
+            if (event instanceof WebhookEventProcessStateChanged) {
+                this.handleEventProcessStateChanged(CastUtils.cast(event));
+            } else if (event instanceof WebhookEventTaskStateChanged) {
+                this.handleEventTaskStateChanged(CastUtils.cast(event));
+            }
+        } catch (DefaultErrorException ex) {
+            if (HttpStatus.FORBIDDEN.equals(HttpStatus.valueOf(ex.getValue().getStatus()))) {
+                LOGGER.error(
+                    String.format(
+                        "The resource cannot be accessed, the process may be completed or cancelled. We ignore this event. Id: %s",
+                        event.getId()
+                    ),
+                    ex
+                );
+            } else if (HttpStatus.CONFLICT.equals(HttpStatus.valueOf(ex.getValue().getStatus()))) {
+                LOGGER.error(String.format("Invalid state of resource. We ignore this event. Id: %s", event.getId()), ex);
+            } else {
+                throw ex;
+            }
         }
     }
 
@@ -95,10 +114,10 @@ public class SampleRestWorkerLoanController {
 
     private void handleEventTaskStateChanged(WebhookEventTaskStateChanged event) {
         WebhookEventTaskStateChangedData data = event.getData();
-        if (data.getTaskCode().equals(TASK_CODE_LOAN_APPLICATION_FORM) && TaskState.COMPLETED.equals(data.getTaskState())) {
+        if (TASK_CODE_LOAN_APPLICATION_FORM.equals(data.getTaskCode()) && TaskState.COMPLETED.equals(data.getTaskState())) {
             this.handleTaskLoanApplication(data);
         }
-        if (data.getTaskCode().equals(TASK_CODE_APPROVE_LOAN) && TaskState.COMPLETED.equals(data.getTaskState())) {
+        if (TASK_CODE_APPROVE_LOAN.equals(data.getTaskCode()) && TaskState.COMPLETED.equals(data.getTaskState())) {
             this.handleTaskApproveLoan(data);
         }
     }
@@ -109,7 +128,7 @@ public class SampleRestWorkerLoanController {
         String authorizedField = TaskUtils.getElementValueAsString(taskApproveLoan, "APPROVAL");
 
         Task taskNotification;
-        if (authorizedField.equals("YES")) {
+        if ("YES".equals(authorizedField)) {
             taskNotification = this.createTaskNotificationOfLoanGranted(data);
         } else {
             taskNotification = this.createTaskNotificationOfLoanGrantedRejection(data);
@@ -194,6 +213,10 @@ public class SampleRestWorkerLoanController {
     }
 
     private void assignTaskToProcessInitiator(Task taskNotification, Process process) {
+        if (PrincipalType.SYSTEM.equals(process.getInitiator().getType())) {
+            return;
+        }
+
         TaskAssignCommand command = new TaskAssignCommand();
         command.setPrincipalId(process.getInitiator().getId());
 
@@ -202,7 +225,7 @@ public class SampleRestWorkerLoanController {
 
     private BigDecimal convertToEuros(String currencyField, String amountField) {
         BigDecimal amountEUR = new BigDecimal(amountField != null ? amountField : "0");
-        if (currencyField.equals("EUR")) {
+        if ("EUR".equals(currencyField)) {
             return amountEUR;
         } else {
             return this.convert(amountEUR, currencyField, "EUR");
