@@ -10,6 +10,8 @@ node_modules/
 npm-debug.log.*
 /.awcache/*
 /.cache-loader/*
+package.json
+package-lock.json
 
 ######################
 # SASS
