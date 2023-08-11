@@ -140,7 +140,6 @@ public class SampleEngineWorkerLoan {
 
         loadConfigurationFile("/config/application.yaml", streams);
         loadConfigurationFile("/config/application-local.yaml", streams);
-        loadConfigurationFile("/config/application-local-sandbox.yaml", streams);
 
         try (InputStream inputStream = new SequenceInputStream(enumeration(streams))) {
             return yaml.load(inputStream);
