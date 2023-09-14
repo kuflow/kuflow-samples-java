@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.14</version>
+    <version>2.7.15</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -67,14 +67,14 @@
     <maven-checkstyle.version>3.2.0</maven-checkstyle.version>
     <checkstyle.version>10.3.3</checkstyle.version>
     <prettier-maven-plugin.version>0.21</prettier-maven-plugin.version>
-    <prettier-java.version>2.2.0</prettier-java.version>
+    <prettier-java.version>2.3.1</prettier-java.version>
     <license-maven-plugin.version>4.1</license-maven-plugin.version>
 
     <!-- Spring dependencies -->
-    <spring-boot.version>2.7.14</spring-boot.version>
+    <spring-boot.version>2.7.15</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>2.5.0</kuflow.version>
+    <kuflow.version>2.5.1-SNAPSHOT</kuflow.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
   </properties>
 

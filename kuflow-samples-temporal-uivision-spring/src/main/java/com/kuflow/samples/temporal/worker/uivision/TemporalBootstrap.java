@@ -26,8 +26,7 @@ import com.kuflow.samples.temporal.worker.uivision.workflow.UIVisionSampleWorkfl
 import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
 import com.kuflow.temporal.activity.uivision.UIVisionActivities;
-import io.temporal.worker.Worker;
-import io.temporal.worker.WorkerFactory;
+import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemporalBootstrap.class);
 
-    private final WorkerFactory factory;
+    private final KuFlowTemporalConnection kuFlowTemporalConnection;
 
     private final KuFlowSyncActivities kuFlowSyncActivities;
 
@@ -51,13 +50,13 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     private final SampleEngineWorkerUiVisionProperties sampleEngineWorkerUiVisionProperties;
 
     public TemporalBootstrap(
-        WorkerFactory factory,
+        KuFlowTemporalConnection kuFlowTemporalConnection,
         KuFlowSyncActivities kuFlowSyncActivities,
         KuFlowAsyncActivities kuFlowAsyncActivities,
         UIVisionActivities uiVisionActivities,
         SampleEngineWorkerUiVisionProperties sampleEngineWorkerUiVisionProperties
     ) {
-        this.factory = factory;
+        this.kuFlowTemporalConnection = kuFlowTemporalConnection;
         this.kuFlowSyncActivities = kuFlowSyncActivities;
         this.kuFlowAsyncActivities = kuFlowAsyncActivities;
         this.uiVisionActivities = uiVisionActivities;
@@ -72,18 +71,20 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() {
-        this.factory.shutdown();
-        this.factory.awaitTermination(1, TimeUnit.MINUTES);
+        this.kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
         LOGGER.info("Temporal connection shutdown");
     }
 
     private void startWorkers() {
-        Worker worker = this.factory.newWorker(this.sampleEngineWorkerUiVisionProperties.getTemporal().getKuflowQueue());
-        worker.registerWorkflowImplementationTypes(UIVisionSampleWorkflowImpl.class);
-        worker.registerActivitiesImplementations(this.kuFlowSyncActivities);
-        worker.registerActivitiesImplementations(this.kuFlowAsyncActivities);
-        worker.registerActivitiesImplementations(this.uiVisionActivities);
+        this.kuFlowTemporalConnection.configureWorker(builder ->
+                builder
+                    .withTaskQueue(this.sampleEngineWorkerUiVisionProperties.getTemporal().getKuflowQueue())
+                    .withWorkflowImplementationTypes(UIVisionSampleWorkflowImpl.class)
+                    .withActivitiesImplementations(this.kuFlowSyncActivities)
+                    .withActivitiesImplementations(this.kuFlowAsyncActivities)
+                    .withActivitiesImplementations(this.uiVisionActivities)
+            );
 
-        this.factory.start();
+        this.kuFlowTemporalConnection.start();
     }
 }
