@@ -22,10 +22,13 @@
  */
 package com.kuflow.samples.temporal.worker.email.workflow;
 
+import com.kuflow.temporal.activity.kuflow.util.Constants;
 import com.kuflow.temporal.common.model.WorkflowRequest;
 import com.kuflow.temporal.common.model.WorkflowResponse;
+import io.temporal.workflow.SignalMethod;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
+import java.util.UUID;
 
 @WorkflowInterface
 public interface SampleWorkflow {
@@ -33,4 +36,7 @@ public interface SampleWorkflow {
 
     @WorkflowMethod
     WorkflowResponse runWorkflow(WorkflowRequest request);
+
+    @SignalMethod(name = Constants.KUFLOW_ENGINE_SIGNAL_COMPLETED_TASK)
+    void kuFlowEngineSignalCompletedTask(UUID taskId);
 }

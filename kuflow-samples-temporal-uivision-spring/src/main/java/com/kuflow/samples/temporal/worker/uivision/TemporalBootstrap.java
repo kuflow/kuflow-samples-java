@@ -23,8 +23,7 @@
 package com.kuflow.samples.temporal.worker.uivision;
 
 import com.kuflow.samples.temporal.worker.uivision.workflow.UIVisionSampleWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.uivision.UIVisionActivities;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +40,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final KuFlowTemporalConnection kuFlowTemporalConnection;
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
-
-    private final KuFlowAsyncActivities kuFlowAsyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final UIVisionActivities uiVisionActivities;
 
@@ -51,14 +48,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     public TemporalBootstrap(
         KuFlowTemporalConnection kuFlowTemporalConnection,
-        KuFlowSyncActivities kuFlowSyncActivities,
-        KuFlowAsyncActivities kuFlowAsyncActivities,
+        KuFlowActivities kuFlowActivities,
         UIVisionActivities uiVisionActivities,
         SampleEngineWorkerUiVisionProperties sampleEngineWorkerUiVisionProperties
     ) {
         this.kuFlowTemporalConnection = kuFlowTemporalConnection;
-        this.kuFlowSyncActivities = kuFlowSyncActivities;
-        this.kuFlowAsyncActivities = kuFlowAsyncActivities;
+        this.kuFlowActivities = kuFlowActivities;
         this.uiVisionActivities = uiVisionActivities;
         this.sampleEngineWorkerUiVisionProperties = sampleEngineWorkerUiVisionProperties;
     }
@@ -80,8 +75,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
                 builder
                     .withTaskQueue(this.sampleEngineWorkerUiVisionProperties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(UIVisionSampleWorkflowImpl.class)
-                    .withActivitiesImplementations(this.kuFlowSyncActivities)
-                    .withActivitiesImplementations(this.kuFlowAsyncActivities)
+                    .withActivitiesImplementations(this.kuFlowActivities)
                     .withActivitiesImplementations(this.uiVisionActivities)
             );
 

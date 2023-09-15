@@ -27,8 +27,7 @@ import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
 import com.kuflow.rest.util.TaskUtils;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessRequest;
 import com.kuflow.temporal.activity.kuflow.model.RetrieveProcessResponse;
@@ -44,6 +43,8 @@ import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 
@@ -59,11 +60,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     private static final String TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION = "NOTIFICATION_REJECTION";
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
-
-    private final KuFlowAsyncActivities kuFlowAsyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final CurrencyConversionActivities currencyConversionActivities;
+
+    private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
     private KuFlowGenerator kuflowGenerator;
 
@@ -77,16 +78,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
             .setScheduleToCloseTimeout(Duration.ofDays(365))
             .validateAndBuildWithDefaults();
 
-        ActivityOptions asyncActivityOptions = ActivityOptions
-            .newBuilder()
-            .setRetryOptions(defaultRetryOptions)
-            .setStartToCloseTimeout(Duration.ofDays(1))
-            .setScheduleToCloseTimeout(Duration.ofDays(365))
-            .validateAndBuildWithDefaults();
-
-        this.kuFlowSyncActivities = Workflow.newActivityStub(KuFlowSyncActivities.class, defaultActivityOptions);
-
-        this.kuFlowAsyncActivities = Workflow.newActivityStub(KuFlowAsyncActivities.class, asyncActivityOptions);
+        this.kuFlowActivities = Workflow.newActivityStub(KuFlowActivities.class, defaultActivityOptions);
 
         this.currencyConversionActivities = Workflow.newActivityStub(CurrencyConversionActivities.class, defaultActivityOptions);
     }
@@ -128,11 +120,16 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         return this.completeWorkflow(workflowRequest);
     }
 
+    @Override
+    public void kuFlowEngineSignalCompletedTask(UUID taskId) {
+        this.kuFlowCompletedTaskIds.add(taskId);
+    }
+
     private Process retrieveProcess(WorkflowRequest workflowRequest) {
         RetrieveProcessRequest request = new RetrieveProcessRequest();
         request.setProcessId(workflowRequest.getProcessId());
 
-        RetrieveProcessResponse response = this.kuFlowSyncActivities.retrieveProcess(request);
+        RetrieveProcessResponse response = this.kuFlowActivities.retrieveProcess(request);
 
         return response.getProcess();
     }
@@ -152,13 +149,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         saveFirstNameMetadataRequest.setProcessId(taskLoanApplication.getProcessId());
         saveFirstNameMetadataRequest.setElementDefinitionCode("FIRST_NAME");
         SaveProcessElementRequestUtils.addElementValueAsString(saveFirstNameMetadataRequest, firstName);
-        this.kuFlowSyncActivities.saveProcessElement(saveFirstNameMetadataRequest);
+        this.kuFlowActivities.saveProcessElement(saveFirstNameMetadataRequest);
 
         SaveProcessElementRequest saveLastNameMetadataRequest = new SaveProcessElementRequest();
         saveLastNameMetadataRequest.setProcessId(taskLoanApplication.getProcessId());
         saveLastNameMetadataRequest.setElementDefinitionCode("LAST_NAME");
         SaveProcessElementRequestUtils.addElementValueAsString(saveLastNameMetadataRequest, lastName);
-        this.kuFlowSyncActivities.saveProcessElement(saveLastNameMetadataRequest);
+        this.kuFlowActivities.saveProcessElement(saveLastNameMetadataRequest);
     }
 
     /**
@@ -186,14 +183,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         TaskUtils.setElementValueAsString(task, "LAST_NAME", lastName);
         TaskUtils.setElementValueAsString(task, "AMOUNT", amountEUR.toPlainString());
 
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-
-        this.kuFlowAsyncActivities.createTaskAndWaitFinished(createTaskRequest);
+        this.createTaskAndWaitCompleted(task);
 
         RetrieveTaskRequest retrieveTaskRequest = new RetrieveTaskRequest();
         retrieveTaskRequest.setTaskId(taskId);
-        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowSyncActivities.retrieveTask(retrieveTaskRequest);
+        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowActivities.retrieveTask(retrieveTaskRequest);
 
         return retrieveTaskResponse.getTask();
     }
@@ -215,14 +209,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         task.setProcessId(processId);
         task.setTaskDefinition(tasksDefinition);
 
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-
-        this.kuFlowAsyncActivities.createTaskAndWaitFinished(createTaskRequest);
+        this.createTaskAndWaitCompleted(task);
 
         RetrieveTaskRequest retrieveTaskRequest = new RetrieveTaskRequest();
         retrieveTaskRequest.setTaskId(taskId);
-        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowSyncActivities.retrieveTask(retrieveTaskRequest);
+        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowActivities.retrieveTask(retrieveTaskRequest);
 
         return retrieveTaskResponse.getTask();
     }
@@ -248,7 +239,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         CreateTaskRequest request = new CreateTaskRequest();
         request.setTask(task);
 
-        this.kuFlowSyncActivities.createTask(request);
+        this.kuFlowActivities.createTask(request);
     }
 
     /**
@@ -272,7 +263,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         CreateTaskRequest request = new CreateTaskRequest();
         request.setTask(task);
 
-        this.kuFlowSyncActivities.createTask(request);
+        this.kuFlowActivities.createTask(request);
     }
 
     private BigDecimal convertToEuros(String currency, String amount) {
@@ -283,5 +274,19 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         String amountText = this.currencyConversionActivities.convert(amountNumber.toPlainString(), currency, "EUR");
         return new BigDecimal(amountText);
+    }
+
+    /**
+     * Create a task and wait for the task will be completed
+     * @param task task to create
+     */
+    private void createTaskAndWaitCompleted(Task task) {
+        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
+        createTaskRequest.setTask(task);
+
+        this.kuFlowActivities.createTask(createTaskRequest);
+
+        // Wait for completion
+        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(task.getId()));
     }
 }

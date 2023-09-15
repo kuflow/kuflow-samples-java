@@ -24,8 +24,7 @@ package com.kuflow.samples.temporal.worker.email;
 
 import com.kuflow.samples.temporal.worker.email.workflow.SampleWorkflowImpl;
 import com.kuflow.temporal.activity.email.EmailActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -41,9 +40,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final KuFlowTemporalConnection kuFlowTemporalConnection;
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
-
-    private final KuFlowAsyncActivities kuFlowAsyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final EmailActivities emailActivities;
 
@@ -51,14 +48,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     public TemporalBootstrap(
         KuFlowTemporalConnection kuFlowTemporalConnection,
-        KuFlowSyncActivities kuFlowSyncActivities,
-        KuFlowAsyncActivities kuFlowAsyncActivities,
+        KuFlowActivities kuFlowActivities,
         EmailActivities emailActivities,
         SampleEngineWorkerEmailProperties sampleEngineWorkerEmailProperties
     ) {
         this.kuFlowTemporalConnection = kuFlowTemporalConnection;
-        this.kuFlowSyncActivities = kuFlowSyncActivities;
-        this.kuFlowAsyncActivities = kuFlowAsyncActivities;
+        this.kuFlowActivities = kuFlowActivities;
         this.emailActivities = emailActivities;
         this.sampleEngineWorkerEmailProperties = sampleEngineWorkerEmailProperties;
     }
@@ -80,8 +75,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
                 builder
                     .withTaskQueue(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(SampleWorkflowImpl.class)
-                    .withActivitiesImplementations(this.kuFlowSyncActivities)
-                    .withActivitiesImplementations(this.kuFlowAsyncActivities)
+                    .withActivitiesImplementations(this.kuFlowActivities)
                     .withActivitiesImplementations(this.emailActivities)
             );
 

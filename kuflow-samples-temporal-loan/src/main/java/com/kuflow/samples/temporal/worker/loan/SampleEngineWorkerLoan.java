@@ -31,10 +31,8 @@ import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivitiesImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivitiesImpl;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivitiesImpl;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,15 +67,13 @@ public class SampleEngineWorkerLoan {
             .instance(kuFlowRestClient)
             .configureWorkflowServiceStubs(builder -> builder.setTarget(properties.getTemporal().getTarget()))
             .configureWorker(builder -> {
-                KuFlowSyncActivities kuFlowSyncActivities = new KuFlowSyncActivitiesImpl(kuFlowRestClient);
-                KuFlowAsyncActivities kuFlowAsyncActivities = new KuFlowAsyncActivitiesImpl(kuFlowRestClient);
+                KuFlowActivities kuFlowActivities = new KuFlowActivitiesImpl(kuFlowRestClient);
                 CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
 
                 builder
                     .withTaskQueue(properties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
-                    .withActivitiesImplementations(kuFlowSyncActivities)
-                    .withActivitiesImplementations(kuFlowAsyncActivities)
+                    .withActivitiesImplementations(kuFlowActivities)
                     .withActivitiesImplementations(conversionActivities);
             });
 
