@@ -28,17 +28,12 @@ import static java.util.stream.Collectors.joining;
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.rest.KuFlowRestClientBuilder;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.KuFlowApiProperties;
-import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivitiesImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivitiesImpl;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivitiesImpl;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
-import com.kuflow.temporal.common.ssl.SslContextBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -70,31 +65,15 @@ public class SampleEngineWorkerLoan {
 
         KuFlowTemporalConnection kuFlowTemporalConnection = KuFlowTemporalConnection
             .instance(kuFlowRestClient)
-            .configureWorkflowServiceStubs(builder -> {
-                MutualTlsProperties mutualTls = properties.getTemporal().getMutualTls();
-                SslContext sslContext = SslContextBuilder
-                    .builder()
-                    .withCaFile(mutualTls.getCaFile())
-                    .withCaData(mutualTls.getCaData())
-                    .withCertFile(mutualTls.getCertFile())
-                    .withCertData(mutualTls.getCertData())
-                    .withKeyFile(mutualTls.getKey())
-                    .withKeyData(mutualTls.getKeyData())
-                    .build();
-
-                builder.setTarget(properties.getTemporal().getTarget()).setSslContext(sslContext);
-            })
-            .configureWorkflowClient(builder -> builder.setNamespace(properties.getTemporal().getNamespace()))
+            .configureWorkflowServiceStubs(builder -> builder.setTarget(properties.getTemporal().getTarget()))
             .configureWorker(builder -> {
-                KuFlowSyncActivities kuFlowSyncActivities = new KuFlowSyncActivitiesImpl(kuFlowRestClient);
-                KuFlowAsyncActivities kuFlowAsyncActivities = new KuFlowAsyncActivitiesImpl(kuFlowRestClient);
+                KuFlowActivities kuFlowActivities = new KuFlowActivitiesImpl(kuFlowRestClient);
                 CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
 
                 builder
                     .withTaskQueue(properties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
-                    .withActivitiesImplementations(kuFlowSyncActivities)
-                    .withActivitiesImplementations(kuFlowAsyncActivities)
+                    .withActivitiesImplementations(kuFlowActivities)
                     .withActivitiesImplementations(conversionActivities);
             });
 

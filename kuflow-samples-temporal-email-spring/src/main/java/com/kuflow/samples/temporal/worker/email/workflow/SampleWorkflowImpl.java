@@ -30,8 +30,7 @@ import com.kuflow.rest.util.TaskUtils;
 import com.kuflow.temporal.activity.email.EmailActivities;
 import com.kuflow.temporal.activity.email.model.Email;
 import com.kuflow.temporal.activity.email.model.SendMailRequest;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.model.AppendTaskLogRequest;
 import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
@@ -45,6 +44,8 @@ import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class SampleWorkflowImpl implements SampleWorkflow {
@@ -60,11 +61,11 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         EMAIL_BODY,
     }
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
-
-    private final KuFlowAsyncActivities kuFlowAsyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final EmailActivities emailActivities;
+
+    private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
     private KuFlowGenerator kuflowGenerator;
 
@@ -78,16 +79,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
             .setScheduleToCloseTimeout(Duration.ofDays(365))
             .validateAndBuildWithDefaults();
 
-        ActivityOptions asyncActivityOptions = ActivityOptions
-            .newBuilder()
-            .setRetryOptions(defaultRetryOptions)
-            .setStartToCloseTimeout(Duration.ofDays(1))
-            .setScheduleToCloseTimeout(Duration.ofDays(365))
-            .validateAndBuildWithDefaults();
-
-        this.kuFlowSyncActivities = Workflow.newActivityStub(KuFlowSyncActivities.class, defaultActivityOptions);
-
-        this.kuFlowAsyncActivities = Workflow.newActivityStub(KuFlowAsyncActivities.class, asyncActivityOptions);
+        this.kuFlowActivities = Workflow.newActivityStub(KuFlowActivities.class, defaultActivityOptions);
 
         this.emailActivities = Workflow.newActivityStub(EmailActivities.class, defaultActivityOptions);
     }
@@ -105,9 +97,14 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         return this.completeWorkflow(workflowRequest);
     }
 
+    @Override
+    public void kuFlowEngineSignalCompletedTask(UUID taskId) {
+        this.kuFlowCompletedTaskIds.add(taskId);
+    }
+
     /**
      * Complete the Workflow
-     * @param process process
+     * @param workflowRequest workflow request
      * @return the workflow response
      */
     private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
@@ -134,15 +131,12 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         task.setProcessId(processId);
         task.setTaskDefinition(tasksDefinition);
 
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-
         // Create Task in KuFlow
-        this.kuFlowAsyncActivities.createTaskAndWaitFinished(createTaskRequest);
+        this.createTaskAndWaitCompleted(task);
 
         RetrieveTaskRequest retrieveTaskRequest = new RetrieveTaskRequest();
         retrieveTaskRequest.setTaskId(taskId);
-        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowSyncActivities.retrieveTask(retrieveTaskRequest);
+        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowActivities.retrieveTask(retrieveTaskRequest);
 
         return retrieveTaskResponse.getTask();
     }
@@ -169,16 +163,13 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         task.setProcessId(processId);
         task.setTaskDefinition(tasksDefinition);
 
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-
         // Create Automatic Task in KuFlow
-        this.kuFlowSyncActivities.createTask(createTaskRequest);
+        this.createTaskAndWaitCompleted(task);
 
         // Claim Automatic Task: Our worker will be responsible for its completion.
         ClaimTaskRequest claimTaskRequest = new ClaimTaskRequest();
         claimTaskRequest.setTaskId(taskId);
-        this.kuFlowSyncActivities.claimTask(claimTaskRequest);
+        this.kuFlowActivities.claimTask(claimTaskRequest);
 
         // Get values from Info Task
         Email email = new Email();
@@ -201,7 +192,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         // Activity Complete
         CompleteTaskRequest completeRequest = new CompleteTaskRequest();
         completeRequest.setTaskId(taskId);
-        this.kuFlowSyncActivities.completeTask(completeRequest);
+        this.kuFlowActivities.completeTask(completeRequest);
     }
 
     /**
@@ -222,6 +213,20 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         request.setTaskId(taskId);
         request.setLog(log);
 
-        this.kuFlowSyncActivities.appendTaskLog(request);
+        this.kuFlowActivities.appendTaskLog(request);
+    }
+
+    /**
+     * Create a task and wait for the task will be completed
+     * @param task task to create
+     */
+    private void createTaskAndWaitCompleted(Task task) {
+        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
+        createTaskRequest.setTask(task);
+
+        this.kuFlowActivities.createTask(createTaskRequest);
+
+        // Wait for completion
+        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(task.getId()));
     }
 }

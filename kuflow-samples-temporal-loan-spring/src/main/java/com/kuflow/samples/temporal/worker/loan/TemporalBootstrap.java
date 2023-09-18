@@ -24,8 +24,7 @@ package com.kuflow.samples.temporal.worker.loan;
 
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
-import com.kuflow.temporal.activity.kuflow.KuFlowAsyncActivities;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -41,9 +40,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final KuFlowTemporalConnection kuFlowTemporalConnection;
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
-
-    private final KuFlowAsyncActivities kuFlowAsyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final CurrencyConversionActivities currencyConversionActivities;
 
@@ -51,14 +48,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     public TemporalBootstrap(
         KuFlowTemporalConnection kuFlowTemporalConnection,
-        KuFlowSyncActivities kuFlowSyncActivities,
-        KuFlowAsyncActivities kuFlowAsyncActivities,
+        KuFlowActivities kuFlowActivities,
         CurrencyConversionActivities currencyConversionActivities,
         SampleEngineWorkerLoanProperties sampleEngineWorkerLoanProperties
     ) {
         this.kuFlowTemporalConnection = kuFlowTemporalConnection;
-        this.kuFlowSyncActivities = kuFlowSyncActivities;
-        this.kuFlowAsyncActivities = kuFlowAsyncActivities;
+        this.kuFlowActivities = kuFlowActivities;
         this.currencyConversionActivities = currencyConversionActivities;
         this.sampleEngineWorkerLoanProperties = sampleEngineWorkerLoanProperties;
     }
@@ -80,8 +75,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
                 builder
                     .withTaskQueue(this.sampleEngineWorkerLoanProperties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
-                    .withActivitiesImplementations(this.kuFlowSyncActivities)
-                    .withActivitiesImplementations(this.kuFlowAsyncActivities)
+                    .withActivitiesImplementations(this.kuFlowActivities)
                     .withActivitiesImplementations(this.currencyConversionActivities)
             );
 

@@ -24,10 +24,7 @@ package com.kuflow.samples.temporal.worker.email;
 
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerEmailProperties.TemporalProperties;
-import com.kuflow.samples.temporal.worker.email.SampleEngineWorkerEmailProperties.TemporalProperties.MutualTlsProperties;
 import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
-import com.kuflow.temporal.common.ssl.SslContextBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -46,23 +43,9 @@ public class TemporalConfiguration {
     @Bean
     public KuFlowTemporalConnection kuFlowTemporalConnection() {
         TemporalProperties temporalProperties = this.sampleEngineWorkerEmailProperties.getTemporal();
-        MutualTlsProperties mutualTlsProperties = temporalProperties.getMutualTls();
 
         return KuFlowTemporalConnection
             .instance(this.kuFlowRestClient)
-            .configureWorkflowServiceStubs(builder -> {
-                SslContext sslContext = SslContextBuilder
-                    .builder()
-                    .withCaFile(mutualTlsProperties.getCaFile())
-                    .withCaData(mutualTlsProperties.getCaData())
-                    .withCertFile(mutualTlsProperties.getCertFile())
-                    .withCertData(mutualTlsProperties.getCertData())
-                    .withKeyFile(mutualTlsProperties.getKeyFile())
-                    .withKeyData(mutualTlsProperties.getKeyData())
-                    .build();
-
-                builder.setTarget(temporalProperties.getTarget()).setSslContext(sslContext);
-            })
-            .configureWorkflowClient(builder -> builder.setNamespace(temporalProperties.getNamespace()));
+            .configureWorkflowServiceStubs(builder -> builder.setTarget(temporalProperties.getTarget()));
     }
 }

@@ -92,29 +92,9 @@ public class SampleEngineWorkerLoanProperties {
 
     public static final class TemporalProperties {
 
-        private String namespace;
-
-        private String kuflowQueue;
-
         private String target;
 
-        private MutualTlsProperties mutualTls = new MutualTlsProperties();
-
-        public MutualTlsProperties getMutualTls() {
-            return this.mutualTls;
-        }
-
-        public void setMutualTls(MutualTlsProperties mutualTls) {
-            this.mutualTls = mutualTls;
-        }
-
-        public String getNamespace() {
-            return this.namespace;
-        }
-
-        public void setNamespace(String namespace) {
-            this.namespace = namespace;
-        }
+        private String kuflowQueue;
 
         public String getTarget() {
             return this.target;
@@ -130,69 +110,6 @@ public class SampleEngineWorkerLoanProperties {
 
         public void setKuflowQueue(String kuflowQueue) {
             this.kuflowQueue = kuflowQueue;
-        }
-
-        public static final class MutualTlsProperties {
-
-            private String caFile;
-
-            private String caData;
-
-            private String certFile;
-
-            private String certData;
-
-            private String key;
-
-            private String keyData;
-
-            public String getCaFile() {
-                return this.caFile;
-            }
-
-            public void setCaFile(String caFile) {
-                this.caFile = caFile;
-            }
-
-            public String getCaData() {
-                return this.caData;
-            }
-
-            public void setCaData(String caData) {
-                this.caData = caData;
-            }
-
-            public String getCertFile() {
-                return this.certFile;
-            }
-
-            public void setCertFile(String certFile) {
-                this.certFile = certFile;
-            }
-
-            public String getCertData() {
-                return this.certData;
-            }
-
-            public void setCertData(String certData) {
-                this.certData = certData;
-            }
-
-            public String getKey() {
-                return this.key;
-            }
-
-            public void setKey(String key) {
-                this.key = key;
-            }
-
-            public String getKeyData() {
-                return this.keyData;
-            }
-
-            public void setKeyData(String keyData) {
-                this.keyData = keyData;
-            }
         }
     }
 }

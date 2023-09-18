@@ -43,6 +43,29 @@ public class SampleEngineWorkerUiVisionProperties {
         return this.uivision;
     }
 
+    public static final class TemporalProperties {
+
+        private String target;
+
+        private String kuflowQueue;
+
+        public String getTarget() {
+            return this.target;
+        }
+
+        public void setTarget(String target) {
+            this.target = target;
+        }
+
+        public String getKuflowQueue() {
+            return this.kuflowQueue;
+        }
+
+        public void setKuflowQueue(String kuflowQueue) {
+            this.kuflowQueue = kuflowQueue;
+        }
+    }
+
     public class UIVisionProperties {
 
         @NotBlank
@@ -126,108 +149,6 @@ public class SampleEngineWorkerUiVisionProperties {
 
         public void setExecutionTimeout(Duration executionTimeout) {
             this.executionTimeout = executionTimeout;
-        }
-    }
-
-    public static final class TemporalProperties {
-
-        private String namespace;
-
-        private String kuflowQueue;
-
-        private String target;
-
-        private MutualTlsProperties mutualTls = new MutualTlsProperties();
-
-        public MutualTlsProperties getMutualTls() {
-            return this.mutualTls;
-        }
-
-        public String getNamespace() {
-            return this.namespace;
-        }
-
-        public void setNamespace(String namespace) {
-            this.namespace = namespace;
-        }
-
-        public String getTarget() {
-            return this.target;
-        }
-
-        public void setTarget(String target) {
-            this.target = target;
-        }
-
-        public String getKuflowQueue() {
-            return this.kuflowQueue;
-        }
-
-        public void setKuflowQueue(String kuflowQueue) {
-            this.kuflowQueue = kuflowQueue;
-        }
-
-        public static final class MutualTlsProperties {
-
-            private String caFile;
-
-            private String caData;
-
-            private String certFile;
-
-            private String certData;
-
-            private String keyFile;
-
-            private String keyData;
-
-            public String getCaFile() {
-                return this.caFile;
-            }
-
-            public void setCaFile(String caFile) {
-                this.caFile = caFile;
-            }
-
-            public String getCaData() {
-                return this.caData;
-            }
-
-            public void setCaData(String caData) {
-                this.caData = caData;
-            }
-
-            public String getCertFile() {
-                return this.certFile;
-            }
-
-            public void setCertFile(String certFile) {
-                this.certFile = certFile;
-            }
-
-            public String getCertData() {
-                return this.certData;
-            }
-
-            public void setCertData(String certData) {
-                this.certData = certData;
-            }
-
-            public String getKeyFile() {
-                return this.keyFile;
-            }
-
-            public void setKeyFile(String keyFile) {
-                this.keyFile = keyFile;
-            }
-
-            public String getKeyData() {
-                return this.keyData;
-            }
-
-            public void setKeyData(String keyData) {
-                this.keyData = keyData;
-            }
         }
     }
 }
