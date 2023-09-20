@@ -24,7 +24,7 @@ package com.kuflow.samples.temporal.worker.uivision.workflow;
 
 import com.kuflow.rest.model.Task;
 import com.kuflow.rest.model.TaskDefinitionSummary;
-import com.kuflow.temporal.activity.kuflow.KuFlowSyncActivities;
+import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
 import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
@@ -37,6 +37,8 @@ import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 
@@ -46,9 +48,11 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
     private static final String TASK_ROBOT_RESULTS = "ROBOT_RESULTS";
 
-    private final KuFlowSyncActivities kuFlowSyncActivities;
+    private final KuFlowActivities kuFlowActivities;
 
     private final UIVisionActivities uiVisionActivities;
+
+    private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
     private KuFlowGenerator kuflowGenerator;
 
@@ -62,7 +66,7 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
             .setScheduleToCloseTimeout(Duration.ofDays(365))
             .validateAndBuildWithDefaults();
 
-        this.kuFlowSyncActivities = Workflow.newActivityStub(KuFlowSyncActivities.class, defaultActivityOptions);
+        this.kuFlowActivities = Workflow.newActivityStub(KuFlowActivities.class, defaultActivityOptions);
 
         this.uiVisionActivities = Workflow.newActivityStub(UIVisionActivities.class, defaultActivityOptions);
     }
@@ -76,6 +80,11 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
         LOGGER.info("UiVision process finished. {}", workflowRequest.getProcessId());
 
         return this.completeWorkflow(workflowRequest);
+    }
+
+    @Override
+    public void kuFlowEngineSignalCompletedTask(UUID taskId) {
+        this.kuFlowCompletedTaskIds.add(taskId);
     }
 
     private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
@@ -99,14 +108,14 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
         CreateTaskRequest createTaskRequest = new CreateTaskRequest();
         createTaskRequest.setTask(task);
-        this.kuFlowSyncActivities.createTask(createTaskRequest);
+        this.kuFlowActivities.createTask(createTaskRequest);
 
         // Claim task by the worker because is a valid candidate.
         // We could also claim it by specifying the "owner" in the above creation call.
         // We use the same application for the worker and for the robot.
         ClaimTaskRequest claimTaskRequest = new ClaimTaskRequest();
         claimTaskRequest.setTaskId(taskId);
-        this.kuFlowSyncActivities.claimTask(claimTaskRequest);
+        this.kuFlowActivities.claimTask(claimTaskRequest);
 
         // Executes the Temporal activity to run the robot.
         ExecuteUIVisionMacroRequest executeUIVisionMacroRequest = new ExecuteUIVisionMacroRequest();
@@ -116,6 +125,6 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
         // Complete the task.
         CompleteTaskRequest completeTaskRequest = new CompleteTaskRequest();
         completeTaskRequest.setTaskId(taskId);
-        this.kuFlowSyncActivities.completeTask(completeTaskRequest);
+        this.kuFlowActivities.completeTask(completeTaskRequest);
     }
 }
