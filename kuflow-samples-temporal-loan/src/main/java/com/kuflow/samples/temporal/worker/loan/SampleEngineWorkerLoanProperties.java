@@ -22,6 +22,9 @@
  */
 package com.kuflow.samples.temporal.worker.loan;
 
+import java.util.List;
+import java.util.UUID;
+
 public class SampleEngineWorkerLoanProperties {
 
     private KuFlowProperties kuflow = new KuFlowProperties();
@@ -65,6 +68,8 @@ public class SampleEngineWorkerLoanProperties {
 
         private String clientSecret;
 
+        private String token;
+
         public String getEndpoint() {
             return this.endpoint;
         }
@@ -88,13 +93,51 @@ public class SampleEngineWorkerLoanProperties {
         public void setClientSecret(String clientSecret) {
             this.clientSecret = clientSecret;
         }
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
     }
 
     public static final class TemporalProperties {
 
+        private UUID installationId;
+
+        private UUID tenantId;
+
+        private List<UUID> robotIds;
+
         private String target;
 
         private String kuflowQueue;
+
+        public UUID getInstallationId() {
+            return this.installationId;
+        }
+
+        public void setInstallationId(UUID installationId) {
+            this.installationId = installationId;
+        }
+
+        public UUID getTenantId() {
+            return this.tenantId;
+        }
+
+        public void setTenantId(UUID tenantId) {
+            this.tenantId = tenantId;
+        }
+
+        public List<UUID> getRobotIds() {
+            return this.robotIds;
+        }
+
+        public void setRobotIds(List<UUID> robotIds) {
+            this.robotIds = robotIds;
+        }
 
         public String getTarget() {
             return this.target;

@@ -30,6 +30,7 @@ import com.kuflow.rest.KuFlowRestClientBuilder;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.KuFlowApiProperties;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
+import com.kuflow.samples.temporal.worker.loan.common.BearerAuthenticationCredential;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivitiesImpl;
@@ -59,12 +60,16 @@ public class SampleEngineWorkerLoan {
         KuFlowRestClient kuFlowRestClient = new KuFlowRestClientBuilder()
             .clientId(apiProperties.getClientId())
             .clientSecret(apiProperties.getClientSecret())
+            .credential(apiProperties.getToken() != null ? new BearerAuthenticationCredential(apiProperties.getToken()) : null)
             .endpoint(apiProperties.getEndpoint())
             .allowInsecureConnection(apiProperties.getEndpoint() != null && apiProperties.getEndpoint().startsWith("http://"))
             .buildClient();
 
         KuFlowTemporalConnection kuFlowTemporalConnection = KuFlowTemporalConnection
             .instance(kuFlowRestClient)
+            .withInstallationId(properties.getTemporal().getInstallationId())
+            .withTenantId(properties.getTemporal().getTenantId())
+            .withRobotIds(properties.getTemporal().getRobotIds())
             .configureWorkflowServiceStubs(builder -> builder.setTarget(properties.getTemporal().getTarget()))
             .configureWorker(builder -> {
                 KuFlowActivities kuFlowActivities = new KuFlowActivitiesImpl(kuFlowRestClient);

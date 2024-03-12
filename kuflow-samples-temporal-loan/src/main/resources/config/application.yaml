@@ -2,11 +2,14 @@ kuflow:
   api:
     # ID of the APPLICATION configured in KUFLOW.
     # Get it in "Application details" in the Kuflow APP.
-    client-id: FILL_ME
+    # client-id: FILL_ME
 
     # TOKEN of the APPLICATION configured in KUFLOW.
     # Get it in "Application details" in the Kuflow APP.
-    client-secret: FILL_ME
+    # client-secret: FILL_ME
+
+    # TOKEN of the USER.
+    # token: FILL_ME
 
 temporal:
   # Temporal Queue. Configure it in the "Process definition" in the KUFLOW APP.
