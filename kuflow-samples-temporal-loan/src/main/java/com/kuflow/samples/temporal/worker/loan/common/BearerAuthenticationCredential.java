@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
  * @see TokenCredential
  */
 public record BearerAuthenticationCredential(String token) implements TokenCredential {
-
     /**
      * Creates a token authentication credential.
      *

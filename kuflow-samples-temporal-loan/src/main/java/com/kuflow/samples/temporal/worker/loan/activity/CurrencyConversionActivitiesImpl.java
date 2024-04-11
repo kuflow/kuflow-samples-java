@@ -34,6 +34,7 @@ import java.util.Scanner;
 
 public class CurrencyConversionActivitiesImpl implements CurrencyConversionActivities {
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public String convert(String amountText, String from, String to) {
         BigDecimal amount = new BigDecimal(amountText);
@@ -41,9 +42,8 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
         String fromTransformed = this.transformCurrencyCode(from);
         String toTransformed = this.transformCurrencyCode(to);
         String endpoint = String.format(
-            "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s/%s.json",
-            fromTransformed,
-            toTransformed
+            "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/%s.json",
+            fromTransformed
         );
 
         try (Scanner scanner = new Scanner(new URL(endpoint).openStream(), StandardCharsets.UTF_8).useDelimiter("\\A")) {
@@ -53,7 +53,8 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
             Gson gson = new Gson();
             Map<String, Object> response = gson.fromJson(json, mapType);
 
-            Double conversion = (Double) response.get(toTransformed);
+            Map<String, Double> conversionTable = (Map) response.get(fromTransformed);
+            Double conversion = conversionTable.get(toTransformed);
 
             return amount.multiply(BigDecimal.valueOf(conversion)).toPlainString();
         } catch (Exception e) {

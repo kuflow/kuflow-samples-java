@@ -71,8 +71,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     public SampleEngineWorkerLoanWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
-        ActivityOptions defaultActivityOptions = ActivityOptions
-            .newBuilder()
+        ActivityOptions defaultActivityOptions = ActivityOptions.newBuilder()
             .setRetryOptions(defaultRetryOptions)
             .setStartToCloseTimeout(Duration.ofMinutes(10))
             .setScheduleToCloseTimeout(Duration.ofDays(365))

@@ -44,8 +44,8 @@ public class TemporalConfiguration {
     public KuFlowTemporalConnection kuFlowTemporalConnection() {
         TemporalProperties temporalProperties = this.sampleEngineWorkerEmailProperties.getTemporal();
 
-        return KuFlowTemporalConnection
-            .instance(this.kuFlowRestClient)
-            .configureWorkflowServiceStubs(builder -> builder.setTarget(temporalProperties.getTarget()));
+        return KuFlowTemporalConnection.instance(this.kuFlowRestClient).configureWorkflowServiceStubs(
+            builder -> builder.setTarget(temporalProperties.getTarget())
+        );
     }
 }

@@ -41,6 +41,7 @@ import com.kuflow.samples.rest.worker.loan.util.CastUtils;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -232,20 +233,21 @@ public class SampleRestWorkerLoanController {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private BigDecimal convert(BigDecimal amount, String from, String to) {
         String fromTransformed = this.transformCurrencyCode(from);
         String toTransformed = this.transformCurrencyCode(to);
         String endpoint = String.format(
-            "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s/%s.json",
-            fromTransformed,
-            toTransformed
+            "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/%s.json",
+            fromTransformed
         );
 
         ParameterizedTypeReference<HashMap<String, Object>> responseType = new ParameterizedTypeReference<>() {};
         RequestEntity<Void> request = RequestEntity.get(endpoint).build();
         HashMap<String, Object> response = this.restTemplate.exchange(request, responseType).getBody();
 
-        Double conversion = (Double) response.get(toTransformed);
+        Map<String, Double> conversionTable = (Map) response.get(fromTransformed);
+        Double conversion = conversionTable.get(toTransformed);
 
         return amount.multiply(BigDecimal.valueOf(conversion));
     }
