@@ -59,8 +59,7 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
     public UIVisionSampleWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
-        ActivityOptions defaultActivityOptions = ActivityOptions
-            .newBuilder()
+        ActivityOptions defaultActivityOptions = ActivityOptions.newBuilder()
             .setRetryOptions(defaultRetryOptions)
             .setStartToCloseTimeout(Duration.ofMinutes(15))
             .setScheduleToCloseTimeout(Duration.ofDays(365))

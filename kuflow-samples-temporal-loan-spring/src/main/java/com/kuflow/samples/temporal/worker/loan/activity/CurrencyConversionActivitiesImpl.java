@@ -26,6 +26,7 @@ import io.temporal.failure.ApplicationFailure;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Map;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.RequestEntity;
@@ -41,6 +42,7 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
         this.restTemplate = restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(500)).setReadTimeout(Duration.ofSeconds(500)).build();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public String convert(String amountText, String from, String to) {
         BigDecimal amount = new BigDecimal(amountText);
@@ -48,16 +50,16 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
         String fromTransformed = this.transformCurrencyCode(from);
         String toTransformed = this.transformCurrencyCode(to);
         String endpoint = String.format(
-            "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s/%s.json",
-            fromTransformed,
-            toTransformed
+            "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/%s.json",
+            fromTransformed
         );
 
         ParameterizedTypeReference<HashMap<String, Object>> responseType = new ParameterizedTypeReference<>() {};
         RequestEntity<Void> request = RequestEntity.get(endpoint).build();
         HashMap<String, Object> response = this.restTemplate.exchange(request, responseType).getBody();
 
-        Double conversion = (Double) response.get(toTransformed);
+        Map<String, Double> conversionTable = (Map) response.get(fromTransformed);
+        Double conversion = conversionTable.get(toTransformed);
 
         return amount.multiply(BigDecimal.valueOf(conversion)).toPlainString();
     }

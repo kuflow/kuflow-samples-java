@@ -65,8 +65,7 @@ public class SampleEngineWorkerLoan {
             .allowInsecureConnection(apiProperties.getEndpoint() != null && apiProperties.getEndpoint().startsWith("http://"))
             .buildClient();
 
-        KuFlowTemporalConnection kuFlowTemporalConnection = KuFlowTemporalConnection
-            .instance(kuFlowRestClient)
+        KuFlowTemporalConnection kuFlowTemporalConnection = KuFlowTemporalConnection.instance(kuFlowRestClient)
             .withInstallationId(properties.getTemporal().getInstallationId())
             .withTenantId(properties.getTemporal().getTenantId())
             .withRobotIds(properties.getTemporal().getRobotIds())
@@ -91,8 +90,7 @@ public class SampleEngineWorkerLoan {
             ----------------------------------------------------------
             """
         );
-        Runtime
-            .getRuntime()
+        Runtime.getRuntime()
             .addShutdownHook(
                 new Thread(() -> {
                     kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
@@ -107,11 +105,9 @@ public class SampleEngineWorkerLoan {
             new PropertyUtils() {
                 @Override
                 public Property getProperty(Class<?> type, String name) {
-                    name =
-                        Arrays
-                            .stream(name.split("-"))
-                            .map(s -> Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase())
-                            .collect(joining());
+                    name = Arrays.stream(name.split("-"))
+                        .map(s -> Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase())
+                        .collect(joining());
                     name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
                     return super.getProperty(type, name);
                 }
