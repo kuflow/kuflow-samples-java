@@ -42,6 +42,14 @@
   <dependencies>
     <dependency>
       <groupId>com.kuflow</groupId>
+      <artifactId>kuflow-temporal-worker</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.kuflow</groupId>
+      <artifactId>kuflow-temporal-workflow-kuflow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.kuflow</groupId>
       <artifactId>kuflow-temporal-activity-kuflow</artifactId>
     </dependency>
 

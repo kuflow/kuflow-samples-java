@@ -22,17 +22,19 @@
  */
 package com.kuflow.samples.temporal.worker.uivision.workflow;
 
-import com.kuflow.rest.model.Task;
-import com.kuflow.rest.model.TaskDefinitionSummary;
+import com.kuflow.rest.model.ProcessItemTaskCreateParams;
+import com.kuflow.rest.model.ProcessItemType;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
-import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemCreateRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskClaimRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskCompleteRequest;
 import com.kuflow.temporal.activity.uivision.UIVisionActivities;
 import com.kuflow.temporal.activity.uivision.model.ExecuteUIVisionMacroRequest;
-import com.kuflow.temporal.common.KuFlowGenerator;
-import com.kuflow.temporal.common.model.WorkflowRequest;
-import com.kuflow.temporal.common.model.WorkflowResponse;
+import com.kuflow.temporal.workflow.kuflow.KuFlowWorkflow;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItem;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItemType;
+import com.kuflow.temporal.workflow.kuflow.model.WorkflowRequest;
+import com.kuflow.temporal.workflow.kuflow.model.WorkflowResponse;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
@@ -54,8 +56,6 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
     private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
-    private KuFlowGenerator kuflowGenerator;
-
     public UIVisionSampleWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
@@ -72,8 +72,6 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
     @Override
     public WorkflowResponse runWorkflow(WorkflowRequest workflowRequest) {
-        this.kuflowGenerator = new KuFlowGenerator(workflowRequest.getProcessId());
-
         this.createTaskRobotResults(workflowRequest);
 
         LOGGER.info("UiVision process finished. {}", workflowRequest.getProcessId());
@@ -82,8 +80,10 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
     }
 
     @Override
-    public void kuFlowEngineSignalCompletedTask(UUID taskId) {
-        this.kuFlowCompletedTaskIds.add(taskId);
+    public void handleKuFlowEngineSignalProcessItem(SignalProcessItem signal) {
+        if (SignalProcessItemType.TASK.equals(signal.getType())) {
+            this.kuFlowCompletedTaskIds.add(signal.getId());
+        }
     }
 
     private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
@@ -94,36 +94,35 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
     }
 
     private void createTaskRobotResults(WorkflowRequest workflowRequest) {
-        UUID taskId = this.kuflowGenerator.randomUUID();
+        UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        // Create task in KuFlow
-        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TASK_ROBOT_RESULTS);
+        // Create a process item task in KuFlow
+        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
+        processItemTask.setTaskDefinitionCode(TASK_ROBOT_RESULTS);
 
-        Task task = new Task();
-        task.setId(taskId);
-        task.setProcessId(workflowRequest.getProcessId());
-        task.setTaskDefinition(tasksDefinition);
+        ProcessItemCreateRequest processItem = new ProcessItemCreateRequest();
+        processItem.setId(processItemId);
+        processItem.setProcessId(workflowRequest.getProcessId());
+        processItem.setType(ProcessItemType.TASK);
+        processItem.setTask(processItemTask);
 
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-        this.kuFlowActivities.createTask(createTaskRequest);
+        this.kuFlowActivities.createProcessItem(processItem);
 
         // Claim task by the worker because is a valid candidate.
         // We could also claim it by specifying the "owner" in the above creation call.
         // We use the same application for the worker and for the robot.
-        ClaimTaskRequest claimTaskRequest = new ClaimTaskRequest();
-        claimTaskRequest.setTaskId(taskId);
-        this.kuFlowActivities.claimTask(claimTaskRequest);
+        ProcessItemTaskClaimRequest claimTaskRequest = new ProcessItemTaskClaimRequest();
+        claimTaskRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.claimProcessItemTask(claimTaskRequest);
 
         // Executes the Temporal activity to run the robot.
         ExecuteUIVisionMacroRequest executeUIVisionMacroRequest = new ExecuteUIVisionMacroRequest();
-        executeUIVisionMacroRequest.setTaskId(taskId);
+        executeUIVisionMacroRequest.setProcessItemId(processItemId);
         this.uiVisionActivities.executeUIVisionMacro(executeUIVisionMacroRequest);
 
         // Complete the task.
-        CompleteTaskRequest completeTaskRequest = new CompleteTaskRequest();
-        completeTaskRequest.setTaskId(taskId);
-        this.kuFlowActivities.completeTask(completeTaskRequest);
+        ProcessItemTaskCompleteRequest completeTaskRequest = new ProcessItemTaskCompleteRequest();
+        completeTaskRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.completeProcessItemTask(completeTaskRequest);
     }
 }
