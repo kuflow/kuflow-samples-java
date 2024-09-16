@@ -25,7 +25,7 @@ package com.kuflow.samples.temporal.worker.uivision;
 import com.kuflow.samples.temporal.worker.uivision.workflow.UIVisionSampleWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.uivision.UIVisionActivities;
-import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
+import com.kuflow.temporal.worker.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

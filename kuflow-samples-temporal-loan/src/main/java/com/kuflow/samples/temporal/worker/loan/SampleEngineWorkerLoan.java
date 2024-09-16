@@ -34,7 +34,7 @@ import com.kuflow.samples.temporal.worker.loan.common.BearerAuthenticationCreden
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivitiesImpl;
-import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
+import com.kuflow.temporal.worker.connection.KuFlowTemporalConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;

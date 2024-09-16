@@ -22,29 +22,31 @@
  */
 package com.kuflow.samples.temporal.worker.email.workflow;
 
-import com.kuflow.rest.model.Log;
-import com.kuflow.rest.model.LogLevel;
-import com.kuflow.rest.model.Task;
-import com.kuflow.rest.model.TaskDefinitionSummary;
-import com.kuflow.rest.util.TaskUtils;
+import com.kuflow.rest.model.ProcessItem;
+import com.kuflow.rest.model.ProcessItemTaskCreateParams;
+import com.kuflow.rest.model.ProcessItemTaskLogLevel;
+import com.kuflow.rest.model.ProcessItemType;
 import com.kuflow.temporal.activity.email.EmailActivities;
 import com.kuflow.temporal.activity.email.model.Email;
 import com.kuflow.temporal.activity.email.model.SendMailRequest;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
-import com.kuflow.temporal.activity.kuflow.model.AppendTaskLogRequest;
-import com.kuflow.temporal.activity.kuflow.model.ClaimTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CompleteTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.CreateTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.RetrieveTaskRequest;
-import com.kuflow.temporal.activity.kuflow.model.RetrieveTaskResponse;
-import com.kuflow.temporal.common.KuFlowGenerator;
-import com.kuflow.temporal.common.model.WorkflowRequest;
-import com.kuflow.temporal.common.model.WorkflowResponse;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemCreateRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemRetrieveRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemRetrieveResponse;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskClaimRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskCompleteRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskLoggAppendRequest;
+import com.kuflow.temporal.workflow.kuflow.KuFlowWorkflow;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItem;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItemType;
+import com.kuflow.temporal.workflow.kuflow.model.WorkflowRequest;
+import com.kuflow.temporal.workflow.kuflow.model.WorkflowResponse;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -67,8 +69,6 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
-    private KuFlowGenerator kuflowGenerator;
-
     public SampleWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
 
@@ -85,20 +85,20 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     @Override
     public WorkflowResponse runWorkflow(WorkflowRequest workflowRequest) {
-        this.kuflowGenerator = new KuFlowGenerator(workflowRequest.getProcessId());
-
         UUID processId = workflowRequest.getProcessId();
 
-        Task taskFillInfo = this.createTaskFillInfo(processId);
+        ProcessItem processItemFillInfo = this.createProcessItemFillInfo(processId);
 
-        this.createAutomaticTaskSendEmail(processId, taskFillInfo);
+        this.createAutomaticTaskSendEmail(processId, processItemFillInfo);
 
         return this.completeWorkflow(workflowRequest);
     }
 
     @Override
-    public void kuFlowEngineSignalCompletedTask(UUID taskId) {
-        this.kuFlowCompletedTaskIds.add(taskId);
+    public void handleKuFlowEngineSignalProcessItem(SignalProcessItem signal) {
+        if (SignalProcessItemType.TASK.equals(signal.getType())) {
+            this.kuFlowCompletedTaskIds.add(signal.getId());
+        }
     }
 
     /**
@@ -114,30 +114,31 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     }
 
     /**
-     * Create a task in KuFlow in order to collect the necessary information to send an email.
+     * Create a process item task in KuFlow in order to collect the necessary information to send an email.
      *
      * @param processId process identifier
-     * @return task created
+     * @return process item created
      */
-    private Task createTaskFillInfo(UUID processId) {
-        UUID taskId = this.kuflowGenerator.randomUUID();
+    private ProcessItem createProcessItemFillInfo(UUID processId) {
+        UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TaskDefinitionCode.FILL_INFO.name());
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
 
-        Task task = new Task();
-        task.setId(taskId);
-        task.setProcessId(processId);
-        task.setTaskDefinition(tasksDefinition);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setProcessId(processId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setTask(createTaskRequest);
 
         // Create Task in KuFlow
-        this.createTaskAndWaitCompleted(task);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
-        RetrieveTaskRequest retrieveTaskRequest = new RetrieveTaskRequest();
-        retrieveTaskRequest.setTaskId(taskId);
-        RetrieveTaskResponse retrieveTaskResponse = this.kuFlowActivities.retrieveTask(retrieveTaskRequest);
+        ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
+        retrieveRequest.setProcessItemId(processItemId);
+        ProcessItemRetrieveResponse retrieveResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
-        return retrieveTaskResponse.getTask();
+        return retrieveResponse.getProcessItem();
     }
 
     /**
@@ -149,83 +150,77 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * automatic task in Kuflow that encompasses them. As always, it all depends on the requirements of your workflow.
      *
      * @param processId process identifier
-     * @param infoTask task with the data to send in the email
+     * @param infoProcessItem task with the data to send in the email
      */
-    private void createAutomaticTaskSendEmail(UUID processId, Task infoTask) {
-        UUID taskId = this.kuflowGenerator.randomUUID();
+    private void createAutomaticTaskSendEmail(UUID processId, ProcessItem infoProcessItem) {
+        UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        TaskDefinitionSummary tasksDefinition = new TaskDefinitionSummary();
-        tasksDefinition.setCode(TaskDefinitionCode.SEND_EMAIL.name());
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
-        Task task = new Task();
-        task.setId(taskId);
-        task.setProcessId(processId);
-        task.setTaskDefinition(tasksDefinition);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setProcessId(processId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setTask(createTaskRequest);
 
         // Create Automatic Task in KuFlow
-        this.createTaskAndWaitCompleted(task);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
         // Claim Automatic Task: Our worker will be responsible for its completion.
-        ClaimTaskRequest claimTaskRequest = new ClaimTaskRequest();
-        claimTaskRequest.setTaskId(taskId);
-        this.kuFlowActivities.claimTask(claimTaskRequest);
+        ProcessItemTaskClaimRequest claimRequest = new ProcessItemTaskClaimRequest();
+        claimRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.claimProcessItemTask(claimRequest);
+
+        Map<String, Object> infoProcessItemData = infoProcessItem.getTask().getData().getValue();
 
         // Get values from Info Task
         Email email = new Email();
         email.setTemplate("email");
-        email.setTo(TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_RECIPIENT.name()));
-        email.addVariables("subject", TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_SUBJECT.name()));
-        email.addVariables("body", TaskUtils.getElementValueAsString(infoTask, ElementDefinitionCode.EMAIL_BODY.name()));
+        email.setTo(infoProcessItemData.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).toString());
+        email.addVariables("subject", infoProcessItemData.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).toString());
+        email.addVariables("body", infoProcessItemData.get(ElementDefinitionCode.EMAIL_BODY.name()).toString());
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
-        this.addLogInfoEntryTask(taskId, "Sending email to " + email.getTo());
+        this.addLogInfo(processItemId, "Sending email to " + email.getTo());
 
         // Send a mail
-        SendMailRequest request = new SendMailRequest();
-        request.setEmail(email);
-        this.emailActivities.sendMail(request);
+        SendMailRequest sendMailRequest = new SendMailRequest();
+        sendMailRequest.setEmail(email);
+        this.emailActivities.sendMail(sendMailRequest);
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
-        this.addLogInfoEntryTask(taskId, "Email sent!");
+        this.addLogInfo(processItemId, "Email sent!");
 
         // Activity Complete
-        CompleteTaskRequest completeRequest = new CompleteTaskRequest();
-        completeRequest.setTaskId(taskId);
-        this.kuFlowActivities.completeTask(completeRequest);
+        ProcessItemTaskCompleteRequest completeRequest = new ProcessItemTaskCompleteRequest();
+        completeRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.completeProcessItemTask(completeRequest);
     }
 
     /**
      * Add a log message to the referenced KuFlow task
      *
-     * @param taskId task identifier
+     * @param processItemId process item identifier
      * @param message a log message
      */
-    private void addLogInfoEntryTask(UUID taskId, String message) {
-        UUID logId = this.kuflowGenerator.randomUUID();
+    private void addLogInfo(UUID processItemId, String message) {
+        ProcessItemTaskLoggAppendRequest request = new ProcessItemTaskLoggAppendRequest();
+        request.setProcessItemId(processItemId);
+        request.setLevel(ProcessItemTaskLogLevel.INFO);
+        request.setMessage(message);
 
-        Log log = new Log();
-        log.setId(logId);
-        log.setLevel(LogLevel.INFO);
-        log.setMessage(message);
-
-        AppendTaskLogRequest request = new AppendTaskLogRequest();
-        request.setTaskId(taskId);
-        request.setLog(log);
-
-        this.kuFlowActivities.appendTaskLog(request);
+        this.kuFlowActivities.appendProcessItemTaskLog(request);
     }
 
     /**
      * Create a task and wait for the task will be completed
-     * @param task task to create
+     * @param request process item to create
      */
-    private void createTaskAndWaitCompleted(Task task) {
-        CreateTaskRequest createTaskRequest = new CreateTaskRequest();
-        createTaskRequest.setTask(task);
-
-        this.kuFlowActivities.createTask(createTaskRequest);
+    private void createProcessItemAndWaitCompleted(ProcessItemCreateRequest request) {
+        this.kuFlowActivities.createProcessItem(request);
 
         // Wait for completion
-        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(task.getId()));
+        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(request.getId()));
     }
 }

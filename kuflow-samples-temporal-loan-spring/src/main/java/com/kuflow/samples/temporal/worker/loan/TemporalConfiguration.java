@@ -24,7 +24,7 @@ package com.kuflow.samples.temporal.worker.loan;
 
 import com.kuflow.rest.KuFlowRestClient;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.TemporalProperties;
-import com.kuflow.temporal.common.connection.KuFlowTemporalConnection;
+import com.kuflow.temporal.worker.connection.KuFlowTemporalConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
