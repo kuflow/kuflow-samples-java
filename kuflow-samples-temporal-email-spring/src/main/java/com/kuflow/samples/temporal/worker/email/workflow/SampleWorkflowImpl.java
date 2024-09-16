@@ -38,6 +38,7 @@ import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskCompleteRequest;
 import com.kuflow.temporal.activity.kuflow.model.ProcessItemTaskLoggAppendRequest;
 import com.kuflow.temporal.workflow.kuflow.KuFlowWorkflow;
 import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItem;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItemType;
 import com.kuflow.temporal.workflow.kuflow.model.WorkflowRequest;
 import com.kuflow.temporal.workflow.kuflow.model.WorkflowResponse;
 import io.temporal.activity.ActivityOptions;
@@ -66,7 +67,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     private final EmailActivities emailActivities;
 
-    private final Set<SignalProcessItem> kuFlowEngineSignalProcessItems = new HashSet<>();
+    private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
     public SampleWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
@@ -86,7 +87,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     public WorkflowResponse runWorkflow(WorkflowRequest workflowRequest) {
         UUID processId = workflowRequest.getProcessId();
 
-        ProcessItem processItemFillInfo = this.createProcessItemTaskFillInfo(processId);
+        ProcessItem processItemFillInfo = this.createProcessItemFillInfo(processId);
 
         this.createAutomaticTaskSendEmail(processId, processItemFillInfo);
 
@@ -95,7 +96,9 @@ public class SampleWorkflowImpl implements SampleWorkflow {
 
     @Override
     public void handleKuFlowEngineSignalProcessItem(SignalProcessItem signal) {
-        this.kuFlowEngineSignalProcessItems.add(signal);
+        if (SignalProcessItemType.TASK.equals(signal.getType())) {
+            this.kuFlowCompletedTaskIds.add(signal.getId());
+        }
     }
 
     /**
@@ -111,31 +114,31 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     }
 
     /**
-     * Create a task in KuFlow in order to collect the necessary information to send an email.
+     * Create a process item task in KuFlow in order to collect the necessary information to send an email.
      *
      * @param processId process identifier
-     * @return task created
+     * @return process item created
      */
-    private ProcessItem createProcessItemTaskFillInfo(UUID processId) {
+    private ProcessItem createProcessItemFillInfo(UUID processId) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
 
-        ProcessItemCreateRequest processItem = new ProcessItemCreateRequest();
-        processItem.setId(processItemId);
-        processItem.setProcessId(processId);
-        processItem.setType(ProcessItemType.TASK);
-        processItem.setTask(processItemTask);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setProcessId(processId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setTask(createTaskRequest);
 
         // Create Task in KuFlow
-        this.createProcessItemTaskAndWaitCompleted(processItem);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
-        ProcessItemRetrieveRequest retrieveProcessItemRequest = new ProcessItemRetrieveRequest();
-        retrieveProcessItemRequest.setProcessItemId(processItemId);
-        ProcessItemRetrieveResponse retrieveProcessItemResponse = this.kuFlowActivities.retrieveProcessItem(retrieveProcessItemRequest);
+        ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
+        retrieveRequest.setProcessItemId(processItemId);
+        ProcessItemRetrieveResponse retrieveResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
-        return retrieveProcessItemResponse.getProcessItem();
+        return retrieveResponse.getProcessItem();
     }
 
     /**
@@ -147,39 +150,39 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * automatic task in Kuflow that encompasses them. As always, it all depends on the requirements of your workflow.
      *
      * @param processId process identifier
-     * @param processItemFillInfo process item task with the data to send in the email
+     * @param infoProcessItem task with the data to send in the email
      */
-    private void createAutomaticTaskSendEmail(UUID processId, ProcessItem processItemFillInfo) {
+    private void createAutomaticTaskSendEmail(UUID processId, ProcessItem infoProcessItem) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams processItemTaskCreate = new ProcessItemTaskCreateParams();
-        processItemTaskCreate.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
-        ProcessItemCreateRequest processItemCreateRequest = new ProcessItemCreateRequest();
-        processItemCreateRequest.setId(processItemId);
-        processItemCreateRequest.setProcessId(processId);
-        processItemCreateRequest.setType(ProcessItemType.TASK);
-        processItemCreateRequest.setTask(processItemTaskCreate);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setProcessId(processId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setTask(createTaskRequest);
 
         // Create Automatic Task in KuFlow
-        this.createProcessItemTaskAndWaitCompleted(processItemCreateRequest);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
         // Claim Automatic Task: Our worker will be responsible for its completion.
-        ProcessItemTaskClaimRequest claimProcessItemTaskRequest = new ProcessItemTaskClaimRequest();
-        claimProcessItemTaskRequest.setProcessItemId(processItemId);
-        this.kuFlowActivities.claimProcessItemTask(claimProcessItemTaskRequest);
+        ProcessItemTaskClaimRequest claimRequest = new ProcessItemTaskClaimRequest();
+        claimRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.claimProcessItemTask(claimRequest);
+
+        Map<String, Object> infoProcessItemData = infoProcessItem.getTask().getData().getValue();
 
         // Get values from Info Task
-        Map<String, Object> processItemTaskValue = processItemFillInfo.getTask().getData().getValue();
-
         Email email = new Email();
         email.setTemplate("email");
-        email.setTo(processItemTaskValue.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).toString());
-        email.addVariables("subject", processItemTaskValue.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).toString());
-        email.addVariables("body", processItemTaskValue.get(ElementDefinitionCode.EMAIL_BODY.name()).toString());
+        email.setTo(infoProcessItemData.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).toString());
+        email.addVariables("subject", infoProcessItemData.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).toString());
+        email.addVariables("body", infoProcessItemData.get(ElementDefinitionCode.EMAIL_BODY.name()).toString());
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
-        this.addLogInfoEntryToProcessItemTask(processItemId, "Sending email to " + email.getTo());
+        this.addLogInfo(processItemId, "Sending email to " + email.getTo());
 
         // Send a mail
         SendMailRequest sendMailRequest = new SendMailRequest();
@@ -187,12 +190,12 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         this.emailActivities.sendMail(sendMailRequest);
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
-        this.addLogInfoEntryToProcessItemTask(processItemId, "Email sent!");
+        this.addLogInfo(processItemId, "Email sent!");
 
         // Activity Complete
-        ProcessItemTaskCompleteRequest completeProcessItemRequest = new ProcessItemTaskCompleteRequest();
-        completeProcessItemRequest.setProcessItemId(processItemId);
-        this.kuFlowActivities.completeProcessItemTask(completeProcessItemRequest);
+        ProcessItemTaskCompleteRequest completeRequest = new ProcessItemTaskCompleteRequest();
+        completeRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.completeProcessItemTask(completeRequest);
     }
 
     /**
@@ -201,7 +204,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * @param processItemId process item identifier
      * @param message a log message
      */
-    private void addLogInfoEntryToProcessItemTask(UUID processItemId, String message) {
+    private void addLogInfo(UUID processItemId, String message) {
         ProcessItemTaskLoggAppendRequest request = new ProcessItemTaskLoggAppendRequest();
         request.setProcessItemId(processItemId);
         request.setLevel(ProcessItemTaskLogLevel.INFO);
@@ -214,10 +217,10 @@ public class SampleWorkflowImpl implements SampleWorkflow {
      * Create a task and wait for the task will be completed
      * @param request process item to create
      */
-    private void createProcessItemTaskAndWaitCompleted(ProcessItemCreateRequest request) {
+    private void createProcessItemAndWaitCompleted(ProcessItemCreateRequest request) {
         this.kuFlowActivities.createProcessItem(request);
 
         // Wait for completion
-        Workflow.await(() -> this.kuFlowEngineSignalProcessItems.stream().anyMatch(it -> it.getId().equals(request.getId())));
+        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(request.getId()));
     }
 }

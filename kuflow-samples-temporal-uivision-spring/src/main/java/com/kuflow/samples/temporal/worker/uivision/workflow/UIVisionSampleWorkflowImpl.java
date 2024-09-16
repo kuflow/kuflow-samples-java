@@ -96,24 +96,24 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
     private void createTaskRobotResults(WorkflowRequest workflowRequest) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        // Create a process item task in KuFlow
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TASK_ROBOT_RESULTS);
+        // Create task in KuFlow
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TASK_ROBOT_RESULTS);
 
-        ProcessItemCreateRequest processItem = new ProcessItemCreateRequest();
-        processItem.setId(processItemId);
-        processItem.setProcessId(workflowRequest.getProcessId());
-        processItem.setType(ProcessItemType.TASK);
-        processItem.setTask(processItemTask);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setProcessId(workflowRequest.getProcessId());
+        createRequest.setTask(createTaskRequest);
 
-        this.kuFlowActivities.createProcessItem(processItem);
+        this.kuFlowActivities.createProcessItem(createRequest);
 
         // Claim task by the worker because is a valid candidate.
         // We could also claim it by specifying the "owner" in the above creation call.
         // We use the same application for the worker and for the robot.
-        ProcessItemTaskClaimRequest claimTaskRequest = new ProcessItemTaskClaimRequest();
-        claimTaskRequest.setProcessItemId(processItemId);
-        this.kuFlowActivities.claimProcessItemTask(claimTaskRequest);
+        ProcessItemTaskClaimRequest claimRequest = new ProcessItemTaskClaimRequest();
+        claimRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.claimProcessItemTask(claimRequest);
 
         // Executes the Temporal activity to run the robot.
         ExecuteUIVisionMacroRequest executeUIVisionMacroRequest = new ExecuteUIVisionMacroRequest();
@@ -121,8 +121,8 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
         this.uiVisionActivities.executeUIVisionMacro(executeUIVisionMacroRequest);
 
         // Complete the task.
-        ProcessItemTaskCompleteRequest completeTaskRequest = new ProcessItemTaskCompleteRequest();
-        completeTaskRequest.setProcessItemId(processItemId);
-        this.kuFlowActivities.completeProcessItemTask(completeTaskRequest);
+        ProcessItemTaskCompleteRequest completeRequest = new ProcessItemTaskCompleteRequest();
+        completeRequest.setProcessItemId(processItemId);
+        this.kuFlowActivities.completeProcessItemTask(completeRequest);
     }
 }

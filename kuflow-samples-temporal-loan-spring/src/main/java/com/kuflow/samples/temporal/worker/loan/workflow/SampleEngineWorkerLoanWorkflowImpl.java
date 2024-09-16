@@ -22,6 +22,8 @@
  */
 package com.kuflow.samples.temporal.worker.loan.workflow;
 
+import com.kuflow.rest.model.JsonPatchOperation;
+import com.kuflow.rest.model.JsonPatchOperationType;
 import com.kuflow.rest.model.JsonValue;
 import com.kuflow.rest.model.Process;
 import com.kuflow.rest.model.ProcessItem;
@@ -32,11 +34,12 @@ import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.model.ProcessItemCreateRequest;
 import com.kuflow.temporal.activity.kuflow.model.ProcessItemRetrieveRequest;
 import com.kuflow.temporal.activity.kuflow.model.ProcessItemRetrieveResponse;
-import com.kuflow.temporal.activity.kuflow.model.ProcessMetadataUpdateRequest;
+import com.kuflow.temporal.activity.kuflow.model.ProcessMetadataPatchRequest;
 import com.kuflow.temporal.activity.kuflow.model.ProcessRetrieveRequest;
 import com.kuflow.temporal.activity.kuflow.model.ProcessRetrieveResponse;
 import com.kuflow.temporal.workflow.kuflow.KuFlowWorkflow;
 import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItem;
+import com.kuflow.temporal.workflow.kuflow.model.SignalProcessItemType;
 import com.kuflow.temporal.workflow.kuflow.model.WorkflowRequest;
 import com.kuflow.temporal.workflow.kuflow.model.WorkflowResponse;
 import io.temporal.activity.ActivityOptions;
@@ -45,6 +48,7 @@ import io.temporal.workflow.Workflow;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -66,7 +70,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     private final CurrencyConversionActivities currencyConversionActivities;
 
-    private final Set<SignalProcessItem> kuFlowEngineSignalProcessItems = new HashSet<>();
+    private final Set<UUID> kuFlowCompletedTaskIds = new HashSet<>();
 
     public SampleEngineWorkerLoanWorkflowImpl() {
         RetryOptions defaultRetryOptions = RetryOptions.newBuilder().validateBuildWithDefaults();
@@ -86,7 +90,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     public WorkflowResponse runWorkflow(WorkflowRequest workflowRequest) {
         LOGGER.info("Started loan process {}", workflowRequest.getProcessId());
 
-        ProcessItem processItemLoanApplication = this.createProcessItemTaskLoanApplicationForm(workflowRequest.getProcessId());
+        ProcessItem processItemLoanApplication = this.createProcessItemLoanApplication(workflowRequest.getProcessId());
 
         this.updateProcessMetadata(processItemLoanApplication);
 
@@ -98,7 +102,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         boolean loanAuthorized = true;
         if (amountEUR.compareTo(BigDecimal.valueOf(5_000)) > 0) {
-            ProcessItem processItemApproveLoan = this.createTaskApproveLoan(processItemLoanApplication, amountEUR);
+            ProcessItem processItemApproveLoan = this.createProcessItemApproveLoan(processItemLoanApplication, amountEUR);
 
             String approval = processItemApproveLoan.getTask().getData().getValue().get("APPROVAL").toString();
 
@@ -107,9 +111,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         Process process = this.retrieveProcess(workflowRequest);
         if (loanAuthorized) {
-            this.createTaskNotificationOfLoanGranted(workflowRequest, process);
+            this.createProcessItemTaskNotificationOfLoanGranted(workflowRequest, process);
         } else {
-            this.createTaskNotificationOfLoanGrantedRejection(workflowRequest, process);
+            this.createProcessItemNotificationOfLoanGrantedRejection(workflowRequest, process);
         }
 
         LOGGER.info("Finished loan process {}", workflowRequest.getProcessId());
@@ -119,7 +123,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
     @Override
     public void handleKuFlowEngineSignalProcessItem(SignalProcessItem signal) {
-        this.kuFlowEngineSignalProcessItems.add(signal);
+        if (SignalProcessItemType.TASK.equals(signal.getType())) {
+            this.kuFlowCompletedTaskIds.add(signal.getId());
+        }
     }
 
     private Process retrieveProcess(WorkflowRequest workflowRequest) {
@@ -142,49 +148,56 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         String firstName = processItemLoanApplication.getTask().getData().getValue().get("FIRST_NAME").toString();
         String lastName = processItemLoanApplication.getTask().getData().getValue().get("LAST_NAME").toString();
 
-        JsonValue metadata = new JsonValue();
-        metadata.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName));
+        JsonPatchOperation firstNameJsonPatchOperation = new JsonPatchOperation();
+        firstNameJsonPatchOperation.setOp(JsonPatchOperationType.ADD);
+        firstNameJsonPatchOperation.setPath("/FIRST_NAME");
+        firstNameJsonPatchOperation.setValue(firstName);
 
-        ProcessMetadataUpdateRequest request = new ProcessMetadataUpdateRequest();
-        request.setProcessId(processItemLoanApplication.getProcessId());
-        request.setMetadata(metadata);
+        JsonPatchOperation lastNameJsonPatchOperation = new JsonPatchOperation();
+        lastNameJsonPatchOperation.setOp(JsonPatchOperationType.ADD);
+        lastNameJsonPatchOperation.setPath("/LAST_NAME");
+        lastNameJsonPatchOperation.setValue(lastName);
 
-        this.kuFlowActivities.updateProcessMetadata(request);
+        ProcessMetadataPatchRequest patchRequest = new ProcessMetadataPatchRequest();
+        patchRequest.setProcessId(processItemLoanApplication.getProcessId());
+        patchRequest.setJsonPatch(List.of(firstNameJsonPatchOperation, lastNameJsonPatchOperation));
+
+        this.kuFlowActivities.patchProcessMetadata(patchRequest);
     }
 
     /**
-     * Create a process item task in KuFlow to approve the loan due to doesn't meet the restrictions.
+     * Create a task in KuFlow to approve the loan due to doesn't meet the restrictions.
      *
-     * @param processItemLoanApplication process item task created to request a loan
+     * @param processItemLoanApplication task created to request a loan
      * @param amountEUR amount requested
-     * @return task created
+     * @return process item created
      */
-    private ProcessItem createTaskApproveLoan(ProcessItem processItemLoanApplication, BigDecimal amountEUR) {
+    private ProcessItem createProcessItemApproveLoan(ProcessItem processItemLoanApplication, BigDecimal amountEUR) {
         String firstName = processItemLoanApplication.getTask().getData().getValue().get("FIRST_NAME").toString();
         String lastName = processItemLoanApplication.getTask().getData().getValue().get("LAST_NAME").toString();
 
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        JsonValue data = new JsonValue();
-        data.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
+        JsonValue createTaskData = new JsonValue();
+        createTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
 
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
-        processItemTask.setData(data);
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
+        createTaskRequest.setData(createTaskData);
 
-        ProcessItemCreateRequest processItem = new ProcessItemCreateRequest();
-        processItem.setId(processItemId);
-        processItem.setProcessId(processItemLoanApplication.getProcessId());
-        processItem.setType(ProcessItemType.TASK);
-        processItem.setTask(processItemTask);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(processItemId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setProcessId(processItemLoanApplication.getProcessId());
+        createRequest.setTask(createTaskRequest);
 
-        this.createProcessItemTaskAndWaitCompleted(processItem);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
-        ProcessItemRetrieveRequest retrieveProcessItemRequest = new ProcessItemRetrieveRequest();
-        retrieveProcessItemRequest.setProcessItemId(processItemId);
-        ProcessItemRetrieveResponse retrieveProcessItemResponse = this.kuFlowActivities.retrieveProcessItem(retrieveProcessItemRequest);
+        ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
+        retrieveRequest.setProcessItemId(processItemId);
+        ProcessItemRetrieveResponse retrieveTaskResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
-        return retrieveProcessItemResponse.getProcessItem();
+        return retrieveTaskResponse.getProcessItem();
     }
 
     /**
@@ -193,66 +206,66 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @param processId Process ID
      * @return task created
      */
-    private ProcessItem createProcessItemTaskLoanApplicationForm(UUID processId) {
-        UUID processItemId = KuFlowWorkflow.generateUUIDv7();
+    private ProcessItem createProcessItemLoanApplication(UUID processId) {
+        UUID taskId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
+        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
+        createTaskRequest.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
-        ProcessItemCreateRequest processItem = new ProcessItemCreateRequest();
-        processItem.setId(processItemId);
-        processItem.setProcessId(processId);
-        processItem.setType(ProcessItemType.TASK);
-        processItem.setTask(processItemTask);
+        ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
+        createRequest.setId(taskId);
+        createRequest.setType(ProcessItemType.TASK);
+        createRequest.setProcessId(processId);
+        createRequest.setTask(createTaskRequest);
 
-        this.createProcessItemTaskAndWaitCompleted(processItem);
+        this.createProcessItemAndWaitCompleted(createRequest);
 
-        ProcessItemRetrieveRequest request = new ProcessItemRetrieveRequest();
-        request.setProcessItemId(processItemId);
-        ProcessItemRetrieveResponse response = this.kuFlowActivities.retrieveProcessItem(request);
+        ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
+        retrieveRequest.setProcessItemId(taskId);
+        ProcessItemRetrieveResponse retrieveResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
-        return response.getProcessItem();
+        return retrieveResponse.getProcessItem();
     }
 
     /**
-     * Create a notification task showing that the loan was granted.
+     * Create a notification process item showing that the loan was granted.
      *
      * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationOfLoanGranted(WorkflowRequest workflowRequest, Process process) {
+    private void createProcessItemTaskNotificationOfLoanGranted(WorkflowRequest workflowRequest, Process process) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams processItemTaskCreate = new ProcessItemTaskCreateParams();
-        processItemTaskCreate.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
+        ProcessItemTaskCreateParams requestTask = new ProcessItemTaskCreateParams();
+        requestTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
 
         ProcessItemCreateRequest request = new ProcessItemCreateRequest();
         request.setId(processItemId);
         request.setProcessId(workflowRequest.getProcessId());
         request.setType(ProcessItemType.TASK);
-        request.setTask(processItemTaskCreate);
+        request.setTask(requestTask);
         request.setOwnerId(process.getInitiatorId());
 
         this.kuFlowActivities.createProcessItem(request);
     }
 
     /**
-     * Create a notification task showing that the loan was rejected.
+     * Create a notification process item showing that the loan was rejected.
      *
      * @param workflowRequest workflow request
      * @param process Related process
      */
-    private void createTaskNotificationOfLoanGrantedRejection(WorkflowRequest workflowRequest, Process process) {
+    private void createProcessItemNotificationOfLoanGrantedRejection(WorkflowRequest workflowRequest, Process process) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams processItemTaskCreate = new ProcessItemTaskCreateParams();
-        processItemTaskCreate.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
+        ProcessItemTaskCreateParams requestTask = new ProcessItemTaskCreateParams();
+        requestTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
 
         ProcessItemCreateRequest request = new ProcessItemCreateRequest();
         request.setId(processItemId);
         request.setProcessId(workflowRequest.getProcessId());
         request.setType(ProcessItemType.TASK);
-        request.setTask(processItemTaskCreate);
+        request.setTask(requestTask);
         request.setOwnerId(process.getInitiatorId());
 
         this.kuFlowActivities.createProcessItem(request);
@@ -269,13 +282,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     }
 
     /**
-     * Create a process item task and wait for the task will be completed
-     * @param request process item to create
+     * Create a process item and wait for the task will be completed
+     * @param request process item task to create
      */
-    private void createProcessItemTaskAndWaitCompleted(ProcessItemCreateRequest request) {
+    private void createProcessItemAndWaitCompleted(ProcessItemCreateRequest request) {
         this.kuFlowActivities.createProcessItem(request);
 
         // Wait for completion
-        Workflow.await(() -> this.kuFlowEngineSignalProcessItems.stream().anyMatch(it -> it.getId().equals(request.getId())));
+        Workflow.await(() -> this.kuFlowCompletedTaskIds.contains(request.getId()));
     }
 }

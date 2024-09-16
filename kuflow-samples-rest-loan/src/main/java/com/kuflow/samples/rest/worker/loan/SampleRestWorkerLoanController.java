@@ -38,6 +38,8 @@ import com.kuflow.rest.model.WebhookEventProcessItemTaskStateChanged;
 import com.kuflow.rest.model.WebhookEventProcessItemTaskStateChangedData;
 import com.kuflow.rest.model.WebhookEventProcessStateChanged;
 import com.kuflow.rest.model.WebhookEventProcessStateChangedData;
+import com.kuflow.rest.operation.ProcessItemOperations;
+import com.kuflow.rest.operation.ProcessOperations;
 import com.kuflow.samples.rest.worker.loan.util.CastUtils;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -73,9 +75,15 @@ public class SampleRestWorkerLoanController {
 
     private final KuFlowRestClient kuFlowRestClient;
 
+    private final ProcessOperations processOperations;
+
+    private final ProcessItemOperations processItemOperations;
+
     public SampleRestWorkerLoanController(RestTemplateBuilder restTemplateBuilder, KuFlowRestClient kuFlowRestClient) {
         this.restTemplate = restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(500)).setReadTimeout(Duration.ofSeconds(500)).build();
         this.kuFlowRestClient = kuFlowRestClient;
+        this.processOperations = kuFlowRestClient.getProcessOperations();
+        this.processItemOperations = kuFlowRestClient.getProcessItemOperations();
     }
 
     @PostMapping
@@ -88,7 +96,7 @@ public class SampleRestWorkerLoanController {
             if (event instanceof WebhookEventProcessStateChanged) {
                 this.handleEventProcessStateChanged(CastUtils.cast(event));
             } else if (event instanceof WebhookEventProcessItemTaskStateChanged) {
-                this.handleEventTaskStateChanged(CastUtils.cast(event));
+                this.handleEventProcessItemTaskStateChanged(CastUtils.cast(event));
             }
         } catch (DefaultErrorException ex) {
             if (HttpStatus.FORBIDDEN.equals(HttpStatus.valueOf(ex.getValue().getStatus()))) {
@@ -110,28 +118,28 @@ public class SampleRestWorkerLoanController {
     private void handleEventProcessStateChanged(WebhookEventProcessStateChanged event) {
         WebhookEventProcessStateChangedData data = event.getData();
         if (ProcessState.RUNNING.equals(data.getProcessState())) {
-            this.createTaskLoanApplication(data);
+            this.createProcessItemTaskLoanApplication(data);
         }
     }
 
-    private void handleEventTaskStateChanged(WebhookEventProcessItemTaskStateChanged event) {
+    private void handleEventProcessItemTaskStateChanged(WebhookEventProcessItemTaskStateChanged event) {
         WebhookEventProcessItemTaskStateChangedData data = event.getData();
         if (
             TASK_CODE_LOAN_APPLICATION_FORM.equals(data.getProcessItemTaskCode()) &&
             ProcessItemTaskState.COMPLETED.equals(data.getProcessItemState())
         ) {
-            this.handleTaskLoanApplication(data);
+            this.handleProcessItemLoanApplication(data);
         }
         if (
             TASK_CODE_APPROVE_LOAN.equals(data.getProcessItemTaskCode()) &&
             ProcessItemTaskState.COMPLETED.equals(data.getProcessItemState())
         ) {
-            this.handleTaskApproveLoan(data);
+            this.handleProcessItemApproveLoan(data);
         }
     }
 
-    private void handleTaskApproveLoan(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItem processItemApproveLoan = this.kuFlowRestClient.getProcessItemOperations().retrieveProcessItem(data.getProcessItemId());
+    private void handleProcessItemApproveLoan(WebhookEventProcessItemTaskStateChangedData data) {
+        ProcessItem processItemApproveLoan = this.processItemOperations.retrieveProcessItem(data.getProcessItemId());
 
         String authorizedField = processItemApproveLoan.getTask().getData().getValue().get("APPROVAL").toString();
 
@@ -139,19 +147,18 @@ public class SampleRestWorkerLoanController {
         if ("YES".equals(authorizedField)) {
             processItemNotification = this.createProcessItemTaskNotificationOfLoanGranted(data);
         } else {
-            processItemNotification = this.createTaskNotificationOfLoanGrantedRejection(data);
+            processItemNotification = this.createProcessItemTaskNotificationOfLoanGrantedRejection(data);
         }
 
-        Process process = this.kuFlowRestClient.getProcessOperations().retrieveProcess(data.getProcessId());
+        Process process = this.processOperations.retrieveProcess(data.getProcessId());
 
         this.assignProcessItemTaskToProcessInitiator(processItemNotification, process);
 
-        this.kuFlowRestClient.getProcessOperations().completeProcess(data.getProcessId());
+        this.processOperations.completeProcess(data.getProcessId());
     }
 
-    private void handleTaskLoanApplication(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItem processItemLoanApplication =
-            this.kuFlowRestClient.getProcessItemOperations().retrieveProcessItem(data.getProcessItemId());
+    private void handleProcessItemLoanApplication(WebhookEventProcessItemTaskStateChangedData data) {
+        ProcessItem processItemLoanApplication = this.processItemOperations.retrieveProcessItem(data.getProcessItemId());
 
         String currencyField = processItemLoanApplication.getTask().getData().getValue().get("CURRENCY").toString();
         String amountField = processItemLoanApplication.getTask().getData().getValue().get("AMOUNT").toString();
@@ -159,78 +166,78 @@ public class SampleRestWorkerLoanController {
         BigDecimal amountEUR = this.convertToEuros(currencyField, amountField);
 
         if (amountEUR.compareTo(BigDecimal.valueOf(5000)) > 0) {
-            this.createTaskApproveLoan(processItemLoanApplication, amountEUR);
+            this.createProcessItemTaskApproveLoan(processItemLoanApplication, amountEUR);
         } else {
             ProcessItem processItemNotification = this.createProcessItemTaskNotificationOfLoanGranted(data);
 
-            Process process = this.kuFlowRestClient.getProcessOperations().retrieveProcess(data.getProcessId());
+            Process process = this.processOperations.retrieveProcess(data.getProcessId());
 
             this.assignProcessItemTaskToProcessInitiator(processItemNotification, process);
 
-            this.kuFlowRestClient.getProcessOperations().completeProcess(data.getProcessId());
+            this.processOperations.completeProcess(data.getProcessId());
         }
     }
 
-    private void createTaskLoanApplication(WebhookEventProcessStateChangedData data) {
-        ProcessItemTaskCreateParams processItemTaskCreate = new ProcessItemTaskCreateParams();
-        processItemTaskCreate.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
+    private void createProcessItemTaskLoanApplication(WebhookEventProcessStateChangedData data) {
+        ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
+        paramsTask.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
-        ProcessItemCreateParams processItemCreate = new ProcessItemCreateParams();
-        processItemCreate.setProcessId(data.getProcessId());
-        processItemCreate.setType(ProcessItemType.TASK);
-        processItemCreate.setTask(processItemTaskCreate);
+        ProcessItemCreateParams params = new ProcessItemCreateParams();
+        params.setProcessId(data.getProcessId());
+        params.setType(ProcessItemType.TASK);
+        params.setTask(paramsTask);
 
-        this.kuFlowRestClient.getProcessItemOperations().createProcessItem(processItemCreate);
+        this.processItemOperations.createProcessItem(params);
     }
 
-    private void createTaskApproveLoan(ProcessItem processItemLoanApplication, BigDecimal amountEUR) {
+    private void createProcessItemTaskApproveLoan(ProcessItem processItemLoanApplication, BigDecimal amountEUR) {
         String firstName = processItemLoanApplication.getTask().getData().getValue().get("FIRST_NAME").toString();
         String lastName = processItemLoanApplication.getTask().getData().getValue().get("LAST_NAME").toString();
 
-        JsonValue data = new JsonValue();
-        data.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
+        JsonValue paramsTaskData = new JsonValue();
+        paramsTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
 
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
-        processItemTask.setData(data);
+        ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
+        paramsTask.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
+        paramsTask.setData(paramsTaskData);
 
-        ProcessItemCreateParams processItem = new ProcessItemCreateParams();
-        processItem.setProcessId(processItemLoanApplication.getProcessId());
-        processItem.setType(ProcessItemType.TASK);
-        processItem.setTask(processItemTask);
+        ProcessItemCreateParams params = new ProcessItemCreateParams();
+        params.setProcessId(processItemLoanApplication.getProcessId());
+        params.setType(ProcessItemType.TASK);
+        params.setTask(paramsTask);
 
-        this.kuFlowRestClient.getProcessItemOperations().createProcessItem(processItem);
+        this.processItemOperations.createProcessItem(params);
     }
 
-    private ProcessItem createTaskNotificationOfLoanGrantedRejection(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItemTaskCreateParams processItemTaskCreateParams = new ProcessItemTaskCreateParams();
-        processItemTaskCreateParams.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
+    private ProcessItem createProcessItemTaskNotificationOfLoanGrantedRejection(WebhookEventProcessItemTaskStateChangedData data) {
+        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
+        processItemTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
 
-        ProcessItemCreateParams taskNotificationRejection = new ProcessItemCreateParams();
-        taskNotificationRejection.setProcessId(data.getProcessId());
-        taskNotificationRejection.setType(ProcessItemType.TASK);
-        taskNotificationRejection.setTask(processItemTaskCreateParams);
+        ProcessItemCreateParams processItemNotificationRejection = new ProcessItemCreateParams();
+        processItemNotificationRejection.setProcessId(data.getProcessId());
+        processItemNotificationRejection.setType(ProcessItemType.TASK);
+        processItemNotificationRejection.setTask(processItemTask);
 
-        return this.kuFlowRestClient.getProcessItemOperations().createProcessItem(taskNotificationRejection);
+        return this.processItemOperations.createProcessItem(processItemNotificationRejection);
     }
 
     private ProcessItem createProcessItemTaskNotificationOfLoanGranted(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItemTaskCreateParams processItemTaskCreateParams = new ProcessItemTaskCreateParams();
-        processItemTaskCreateParams.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
+        ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
+        paramsTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
 
-        ProcessItemCreateParams taskNotificationRejection = new ProcessItemCreateParams();
-        taskNotificationRejection.setProcessId(data.getProcessId());
-        taskNotificationRejection.setType(ProcessItemType.TASK);
-        taskNotificationRejection.setTask(processItemTaskCreateParams);
+        ProcessItemCreateParams params = new ProcessItemCreateParams();
+        params.setType(ProcessItemType.TASK);
+        params.setProcessId(data.getProcessId());
+        params.setTask(paramsTask);
 
-        return this.kuFlowRestClient.getProcessItemOperations().createProcessItem(taskNotificationRejection);
+        return this.processItemOperations.createProcessItem(params);
     }
 
-    private void assignProcessItemTaskToProcessInitiator(ProcessItem processItem, Process process) {
+    private void assignProcessItemTaskToProcessInitiator(ProcessItem processItemNotification, Process process) {
         ProcessItemTaskAssignParams params = new ProcessItemTaskAssignParams();
         params.setOwnerId(process.getInitiatorId());
 
-        this.kuFlowRestClient.getProcessItemOperations().assignProcessItemTask(processItem.getId(), params);
+        this.processItemOperations.assignProcessItemTask(processItemNotification.getId(), params);
     }
 
     private BigDecimal convertToEuros(String currencyField, String amountField) {
