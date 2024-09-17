@@ -195,9 +195,9 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
 
         ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
         retrieveRequest.setProcessItemId(processItemId);
-        ProcessItemRetrieveResponse retrieveTaskResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
+        ProcessItemRetrieveResponse retrieveResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
-        return retrieveTaskResponse.getProcessItem();
+        return retrieveResponse.getProcessItem();
     }
 
     /**
@@ -207,13 +207,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
      * @return task created
      */
     private ProcessItem createProcessItemLoanApplication(UUID processId) {
-        UUID taskId = KuFlowWorkflow.generateUUIDv7();
+        UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
         ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
         createTaskRequest.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
-        createRequest.setId(taskId);
+        createRequest.setId(processItemId);
         createRequest.setType(ProcessItemType.TASK);
         createRequest.setProcessId(processId);
         createRequest.setTask(createTaskRequest);
@@ -221,7 +221,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         this.createProcessItemAndWaitCompleted(createRequest);
 
         ProcessItemRetrieveRequest retrieveRequest = new ProcessItemRetrieveRequest();
-        retrieveRequest.setProcessItemId(taskId);
+        retrieveRequest.setProcessItemId(processItemId);
         ProcessItemRetrieveResponse retrieveResponse = this.kuFlowActivities.retrieveProcessItem(retrieveRequest);
 
         return retrieveResponse.getProcessItem();

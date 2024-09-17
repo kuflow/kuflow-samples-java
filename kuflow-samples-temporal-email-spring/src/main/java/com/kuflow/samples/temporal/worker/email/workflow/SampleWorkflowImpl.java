@@ -57,7 +57,7 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         SEND_EMAIL,
     }
 
-    private enum ElementDefinitionCode {
+    private enum FormPropertyCode {
         EMAIL_RECIPIENT,
         EMAIL_SUBJECT,
         EMAIL_BODY,
@@ -177,9 +177,9 @@ public class SampleWorkflowImpl implements SampleWorkflow {
         // Get values from Info Task
         Email email = new Email();
         email.setTemplate("email");
-        email.setTo(infoProcessItemData.get(ElementDefinitionCode.EMAIL_RECIPIENT.name()).toString());
-        email.addVariables("subject", infoProcessItemData.get(ElementDefinitionCode.EMAIL_SUBJECT.name()).toString());
-        email.addVariables("body", infoProcessItemData.get(ElementDefinitionCode.EMAIL_BODY.name()).toString());
+        email.setTo(infoProcessItemData.get(FormPropertyCode.EMAIL_RECIPIENT.name()).toString());
+        email.addVariables("subject", infoProcessItemData.get(FormPropertyCode.EMAIL_SUBJECT.name()).toString());
+        email.addVariables("body", infoProcessItemData.get(FormPropertyCode.EMAIL_BODY.name()).toString());
 
         // Add some logs to Kuflow task in order to see feedback in Kuflow app
         this.addLogInfo(processItemId, "Sending email to " + email.getTo());
