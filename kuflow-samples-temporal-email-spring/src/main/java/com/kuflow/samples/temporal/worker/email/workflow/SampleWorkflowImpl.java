@@ -23,7 +23,6 @@
 package com.kuflow.samples.temporal.worker.email.workflow;
 
 import com.kuflow.rest.model.ProcessItem;
-import com.kuflow.rest.model.ProcessItemTaskCreateParams;
 import com.kuflow.rest.model.ProcessItemTaskLogLevel;
 import com.kuflow.rest.model.ProcessItemType;
 import com.kuflow.temporal.activity.email.EmailActivities;
@@ -122,14 +121,11 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     private ProcessItem createProcessItemFillInfo(UUID processId) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
-        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
-
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
         createRequest.setId(processItemId);
         createRequest.setProcessId(processId);
         createRequest.setType(ProcessItemType.TASK);
-        createRequest.setTask(createTaskRequest);
+        createRequest.setProcessItemDefinitionCode(TaskDefinitionCode.FILL_INFO.name());
 
         // Create Task in KuFlow
         this.createProcessItemAndWaitCompleted(createRequest);
@@ -155,14 +151,11 @@ public class SampleWorkflowImpl implements SampleWorkflow {
     private void createAutomaticTaskSendEmail(UUID processId, ProcessItem infoProcessItem) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
-        createTaskRequest.setTaskDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
-
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
         createRequest.setId(processItemId);
         createRequest.setProcessId(processId);
         createRequest.setType(ProcessItemType.TASK);
-        createRequest.setTask(createTaskRequest);
+        createRequest.setProcessItemDefinitionCode(TaskDefinitionCode.SEND_EMAIL.name());
 
         // Create Automatic Task in KuFlow
         this.createProcessItemAndWaitCompleted(createRequest);

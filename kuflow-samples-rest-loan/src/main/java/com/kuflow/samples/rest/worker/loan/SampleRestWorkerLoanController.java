@@ -125,13 +125,13 @@ public class SampleRestWorkerLoanController {
     private void handleEventProcessItemTaskStateChanged(WebhookEventProcessItemTaskStateChanged event) {
         WebhookEventProcessItemTaskStateChangedData data = event.getData();
         if (
-            TASK_CODE_LOAN_APPLICATION_FORM.equals(data.getProcessItemTaskCode()) &&
+            TASK_CODE_LOAN_APPLICATION_FORM.equals(data.getProcessItemDefinitionCode()) &&
             ProcessItemTaskState.COMPLETED.equals(data.getProcessItemState())
         ) {
             this.handleProcessItemLoanApplication(data);
         }
         if (
-            TASK_CODE_APPROVE_LOAN.equals(data.getProcessItemTaskCode()) &&
+            TASK_CODE_APPROVE_LOAN.equals(data.getProcessItemDefinitionCode()) &&
             ProcessItemTaskState.COMPLETED.equals(data.getProcessItemState())
         ) {
             this.handleProcessItemApproveLoan(data);
@@ -179,13 +179,10 @@ public class SampleRestWorkerLoanController {
     }
 
     private void createProcessItemTaskLoanApplication(WebhookEventProcessStateChangedData data) {
-        ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
-        paramsTask.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
-
         ProcessItemCreateParams params = new ProcessItemCreateParams();
         params.setProcessId(data.getProcessId());
         params.setType(ProcessItemType.TASK);
-        params.setTask(paramsTask);
+        params.setProcessItemDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
         this.processItemOperations.createProcessItem(params);
     }
@@ -198,37 +195,31 @@ public class SampleRestWorkerLoanController {
         paramsTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
 
         ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
-        paramsTask.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
         paramsTask.setData(paramsTaskData);
 
         ProcessItemCreateParams params = new ProcessItemCreateParams();
         params.setProcessId(processItemLoanApplication.getProcessId());
         params.setType(ProcessItemType.TASK);
+        params.setProcessItemDefinitionCode(TASK_CODE_APPROVE_LOAN);
         params.setTask(paramsTask);
 
         this.processItemOperations.createProcessItem(params);
     }
 
     private ProcessItem createProcessItemTaskNotificationOfLoanGrantedRejection(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItemTaskCreateParams processItemTask = new ProcessItemTaskCreateParams();
-        processItemTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
-
         ProcessItemCreateParams processItemNotificationRejection = new ProcessItemCreateParams();
         processItemNotificationRejection.setProcessId(data.getProcessId());
         processItemNotificationRejection.setType(ProcessItemType.TASK);
-        processItemNotificationRejection.setTask(processItemTask);
+        processItemNotificationRejection.setProcessItemDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
 
         return this.processItemOperations.createProcessItem(processItemNotificationRejection);
     }
 
     private ProcessItem createProcessItemTaskNotificationOfLoanGranted(WebhookEventProcessItemTaskStateChangedData data) {
-        ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
-        paramsTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
-
         ProcessItemCreateParams params = new ProcessItemCreateParams();
         params.setType(ProcessItemType.TASK);
         params.setProcessId(data.getProcessId());
-        params.setTask(paramsTask);
+        params.setProcessItemDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
 
         return this.processItemOperations.createProcessItem(params);
     }

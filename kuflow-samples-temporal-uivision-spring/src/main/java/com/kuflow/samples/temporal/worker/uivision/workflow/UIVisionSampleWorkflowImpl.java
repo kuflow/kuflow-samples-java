@@ -22,7 +22,6 @@
  */
 package com.kuflow.samples.temporal.worker.uivision.workflow;
 
-import com.kuflow.rest.model.ProcessItemTaskCreateParams;
 import com.kuflow.rest.model.ProcessItemType;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.activity.kuflow.model.ProcessItemCreateRequest;
@@ -97,14 +96,11 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
         // Create task in KuFlow
-        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
-        createTaskRequest.setTaskDefinitionCode(TASK_ROBOT_RESULTS);
-
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
         createRequest.setId(processItemId);
         createRequest.setType(ProcessItemType.TASK);
         createRequest.setProcessId(workflowRequest.getProcessId());
-        createRequest.setTask(createTaskRequest);
+        createRequest.setProcessItemDefinitionCode(TASK_ROBOT_RESULTS);
 
         this.kuFlowActivities.createProcessItem(createRequest);
 
