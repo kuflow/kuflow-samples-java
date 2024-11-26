@@ -112,11 +112,6 @@
       </dependency>
       <dependency>
         <groupId>com.kuflow</groupId>
-        <artifactId>kuflow-temporal-spring-boot-autoconfigure</artifactId>
-        <version>${kuflow.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.kuflow</groupId>
         <artifactId>kuflow-spring-boot-autoconfigure</artifactId>
         <version>${kuflow.version}</version>
       </dependency>
