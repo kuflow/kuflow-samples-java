@@ -71,13 +71,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     }
 
     private void startWorkers() {
-        this.kuFlowTemporalConnection.configureWorker(
-                builder ->
-                    builder
-                        .withTaskQueue(this.sampleEngineWorkerLoanProperties.getTemporal().getKuflowQueue())
-                        .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
-                        .withActivitiesImplementations(this.kuFlowActivities)
-                        .withActivitiesImplementations(this.currencyConversionActivities)
+        this.kuFlowTemporalConnection.configureWorker(builder ->
+                builder
+                    .withTaskQueue(this.sampleEngineWorkerLoanProperties.getTemporal().getKuflowQueue())
+                    .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
+                    .withActivitiesImplementations(this.kuFlowActivities)
+                    .withActivitiesImplementations(this.currencyConversionActivities)
             );
 
         this.kuFlowTemporalConnection.start();

@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
@@ -100,7 +101,7 @@ public class SampleEngineWorkerLoan {
     }
 
     private static SampleEngineWorkerLoanProperties loadConfiguration() {
-        Constructor constructor = new Constructor(SampleEngineWorkerLoanProperties.class);
+        Constructor constructor = new Constructor(SampleEngineWorkerLoanProperties.class, new LoaderOptions());
         constructor.setPropertyUtils(
             new PropertyUtils() {
                 @Override

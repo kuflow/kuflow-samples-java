@@ -71,13 +71,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
     }
 
     private void startWorkers() {
-        this.kuFlowTemporalConnection.configureWorker(
-                builder ->
-                    builder
-                        .withTaskQueue(this.sampleEngineWorkerUiVisionProperties.getTemporal().getKuflowQueue())
-                        .withWorkflowImplementationTypes(UIVisionSampleWorkflowImpl.class)
-                        .withActivitiesImplementations(this.kuFlowActivities)
-                        .withActivitiesImplementations(this.uiVisionActivities)
+        this.kuFlowTemporalConnection.configureWorker(builder ->
+                builder
+                    .withTaskQueue(this.sampleEngineWorkerUiVisionProperties.getTemporal().getKuflowQueue())
+                    .withWorkflowImplementationTypes(UIVisionSampleWorkflowImpl.class)
+                    .withActivitiesImplementations(this.kuFlowActivities)
+                    .withActivitiesImplementations(this.uiVisionActivities)
             );
 
         this.kuFlowTemporalConnection.start();

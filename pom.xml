@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.18</version>
+    <version>3.3.6</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -52,7 +52,7 @@
   </modules>
 
   <properties>
-    <maven.version>3.8.6</maven.version>
+    <maven.version>3.9.6</maven.version>
     <java.version>17</java.version>
     <resource.delimiter>#</resource.delimiter>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -64,18 +64,18 @@
     <argLine>-Djava.security.egd=file:/dev/./urandom -Xmx256m</argLine>
 
     <!-- Maven plugin dependencies -->
-    <maven-checkstyle.version>3.3.1</maven-checkstyle.version>
-    <checkstyle.version>10.12.7</checkstyle.version>
+    <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
+    <checkstyle.version>10.20.1</checkstyle.version>
     <prettier-maven-plugin.version>0.22</prettier-maven-plugin.version>
-    <prettier-java.version>2.6.0</prettier-java.version>
-    <license-maven-plugin.version>4.3</license-maven-plugin.version>
+    <prettier-java.version>2.6.5</prettier-java.version>
+    <license-maven-plugin.version>4.6</license-maven-plugin.version>
 
     <!-- Spring dependencies -->
-    <spring-boot.version>2.7.18</spring-boot.version>
+    <spring-boot.version>3.3.6</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>3.1.0</kuflow.version>
-    <commons-lang3.version>3.14.0</commons-lang3.version>
+    <kuflow.version>3.2.0</kuflow.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
   </properties>
 
   <dependencyManagement>

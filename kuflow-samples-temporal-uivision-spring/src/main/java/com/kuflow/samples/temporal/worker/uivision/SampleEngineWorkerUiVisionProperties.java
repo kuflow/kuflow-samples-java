@@ -22,9 +22,9 @@
  */
 package com.kuflow.samples.temporal.worker.uivision;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

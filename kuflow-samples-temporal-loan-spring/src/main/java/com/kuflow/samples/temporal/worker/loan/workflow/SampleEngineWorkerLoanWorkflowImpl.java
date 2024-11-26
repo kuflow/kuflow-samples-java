@@ -182,13 +182,13 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         createTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
 
         ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
-        createTaskRequest.setTaskDefinitionCode(TASK_CODE_APPROVE_LOAN);
         createTaskRequest.setData(createTaskData);
 
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
         createRequest.setId(processItemId);
         createRequest.setType(ProcessItemType.TASK);
         createRequest.setProcessId(processItemLoanApplication.getProcessId());
+        createRequest.setProcessItemDefinitionCode(TASK_CODE_APPROVE_LOAN);
         createRequest.setTask(createTaskRequest);
 
         this.createProcessItemAndWaitCompleted(createRequest);
@@ -209,14 +209,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private ProcessItem createProcessItemLoanApplication(UUID processId) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
-        createTaskRequest.setTaskDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
-
         ProcessItemCreateRequest createRequest = new ProcessItemCreateRequest();
         createRequest.setId(processItemId);
         createRequest.setType(ProcessItemType.TASK);
         createRequest.setProcessId(processId);
-        createRequest.setTask(createTaskRequest);
+        createRequest.setProcessItemDefinitionCode(TASK_CODE_LOAN_APPLICATION_FORM);
 
         this.createProcessItemAndWaitCompleted(createRequest);
 
@@ -236,14 +233,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private void createProcessItemTaskNotificationOfLoanGranted(WorkflowRequest workflowRequest, Process process) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams requestTask = new ProcessItemTaskCreateParams();
-        requestTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
-
         ProcessItemCreateRequest request = new ProcessItemCreateRequest();
         request.setId(processItemId);
         request.setProcessId(workflowRequest.getProcessId());
         request.setType(ProcessItemType.TASK);
-        request.setTask(requestTask);
+        request.setProcessItemDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_GRANTED);
         request.setOwnerId(process.getInitiatorId());
 
         this.kuFlowActivities.createProcessItem(request);
@@ -258,14 +252,11 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
     private void createProcessItemNotificationOfLoanGrantedRejection(WorkflowRequest workflowRequest, Process process) {
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
-        ProcessItemTaskCreateParams requestTask = new ProcessItemTaskCreateParams();
-        requestTask.setTaskDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
-
         ProcessItemCreateRequest request = new ProcessItemCreateRequest();
         request.setId(processItemId);
         request.setProcessId(workflowRequest.getProcessId());
         request.setType(ProcessItemType.TASK);
-        request.setTask(requestTask);
+        request.setProcessItemDefinitionCode(TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION);
         request.setOwnerId(process.getInitiatorId());
 
         this.kuFlowActivities.createProcessItem(request);
