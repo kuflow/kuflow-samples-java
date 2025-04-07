@@ -192,7 +192,7 @@ public class SampleRestWorkerLoanController {
         String lastName = processItemLoanApplication.getTask().getData().getValue().get("LAST_NAME").toString();
 
         JsonValue paramsTaskData = new JsonValue();
-        paramsTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
+        paramsTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.floatValue()));
 
         ProcessItemTaskCreateParams paramsTask = new ProcessItemTaskCreateParams();
         paramsTask.setData(paramsTaskData);

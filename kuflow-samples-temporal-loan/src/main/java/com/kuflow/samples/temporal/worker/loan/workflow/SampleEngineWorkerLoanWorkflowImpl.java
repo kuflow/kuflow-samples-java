@@ -179,7 +179,7 @@ public class SampleEngineWorkerLoanWorkflowImpl implements SampleEngineWorkerLoa
         UUID processItemId = KuFlowWorkflow.generateUUIDv7();
 
         JsonValue createTaskData = new JsonValue();
-        createTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.toPlainString()));
+        createTaskData.setValue(Map.of("FIRST_NAME", firstName, "LAST_NAME", lastName, "AMOUNT", amountEUR.floatValue()));
 
         ProcessItemTaskCreateParams createTaskRequest = new ProcessItemTaskCreateParams();
         createTaskRequest.setData(createTaskData);
