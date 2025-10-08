@@ -91,13 +91,12 @@ public class SampleEngineWorkerLoan {
             ----------------------------------------------------------
             """
         );
-        Runtime.getRuntime()
-            .addShutdownHook(
-                new Thread(() -> {
-                    kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
-                    LOGGER.info("Shutting down ...");
-                })
-            );
+        Runtime.getRuntime().addShutdownHook(
+            new Thread(() -> {
+                kuFlowTemporalConnection.shutdown(1, TimeUnit.MINUTES);
+                LOGGER.info("Shutting down ...");
+            })
+        );
     }
 
     private static SampleEngineWorkerLoanProperties loadConfiguration() {

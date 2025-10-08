@@ -72,12 +72,12 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private void startWorkers() {
         this.kuFlowTemporalConnection.configureWorker(builder ->
-                builder
-                    .withTaskQueue(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue())
-                    .withWorkflowImplementationTypes(SampleWorkflowImpl.class)
-                    .withActivitiesImplementations(this.kuFlowActivities)
-                    .withActivitiesImplementations(this.emailActivities)
-            );
+            builder
+                .withTaskQueue(this.sampleEngineWorkerEmailProperties.getTemporal().getKuflowQueue())
+                .withWorkflowImplementationTypes(SampleWorkflowImpl.class)
+                .withActivitiesImplementations(this.kuFlowActivities)
+                .withActivitiesImplementations(this.emailActivities)
+        );
 
         this.kuFlowTemporalConnection.start();
     }

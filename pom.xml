@@ -67,14 +67,14 @@
     <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
     <checkstyle.version>10.20.1</checkstyle.version>
     <prettier-maven-plugin.version>0.22</prettier-maven-plugin.version>
-    <prettier-java.version>2.6.7</prettier-java.version>
+    <prettier-java.version>2.7.5</prettier-java.version>
     <license-maven-plugin.version>4.6</license-maven-plugin.version>
 
     <!-- Spring dependencies -->
-    <spring-boot.version>3.3.6</spring-boot.version>
+    <spring-boot.version>3.3.8</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>3.3.0</kuflow.version>
+    <kuflow.version>3.5.1</kuflow.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
   </properties>
 

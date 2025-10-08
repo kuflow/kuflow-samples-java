@@ -87,7 +87,7 @@ public class UIVisionSampleWorkflowImpl implements UIVisionSampleWorkflow {
 
     private WorkflowResponse completeWorkflow(WorkflowRequest workflowRequest) {
         WorkflowResponse workflowResponse = new WorkflowResponse();
-        workflowResponse.setMessage("Complete process " + workflowRequest.getPayloads());
+        workflowResponse.setMessage("Complete process");
 
         return workflowResponse;
     }
