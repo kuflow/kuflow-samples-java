@@ -24,22 +24,19 @@ package com.kuflow.samples.temporal.worker.loan.activity;
 
 import io.temporal.failure.ApplicationFailure;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 @Component
 public class CurrencyConversionActivitiesImpl implements CurrencyConversionActivities {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public CurrencyConversionActivitiesImpl(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplate = restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(500)).setReadTimeout(Duration.ofSeconds(500)).build();
+    public CurrencyConversionActivitiesImpl(RestClient.Builder restClientBuilder) {
+        this.restClient = restClientBuilder.build();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -55,8 +52,7 @@ public class CurrencyConversionActivitiesImpl implements CurrencyConversionActiv
         );
 
         ParameterizedTypeReference<HashMap<String, Object>> responseType = new ParameterizedTypeReference<>() {};
-        RequestEntity<Void> request = RequestEntity.get(endpoint).build();
-        HashMap<String, Object> response = this.restTemplate.exchange(request, responseType).getBody();
+        HashMap<String, Object> response = this.restClient.get().uri(endpoint).retrieve().body(responseType);
 
         Map<String, Double> conversionTable = (Map) response.get(fromTransformed);
         Double conversion = conversionTable.get(toTransformed);

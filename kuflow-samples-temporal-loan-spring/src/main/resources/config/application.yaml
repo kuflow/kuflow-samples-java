@@ -17,3 +17,7 @@ spring:
       - "optional:classpath:config/application-local.yaml"
   main:
     web-application-type: none
+  http:
+    client:
+      connect-timeout: 60s
+      read-timeout: 300s

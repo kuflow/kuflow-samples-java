@@ -42,20 +42,17 @@ import com.kuflow.rest.operation.ProcessItemOperations;
 import com.kuflow.rest.operation.ProcessOperations;
 import com.kuflow.samples.rest.worker.loan.util.CastUtils;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 @RestController
 @RequestMapping("/webhooks")
@@ -71,7 +68,7 @@ public class SampleRestWorkerLoanController {
 
     private static final String TASK_CODE_NOTIFICATION_OF_LOAN_REJECTION = "NOTIFICATION_REJECTION";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     private final KuFlowRestClient kuFlowRestClient;
 
@@ -79,8 +76,8 @@ public class SampleRestWorkerLoanController {
 
     private final ProcessItemOperations processItemOperations;
 
-    public SampleRestWorkerLoanController(RestTemplateBuilder restTemplateBuilder, KuFlowRestClient kuFlowRestClient) {
-        this.restTemplate = restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(500)).setReadTimeout(Duration.ofSeconds(500)).build();
+    public SampleRestWorkerLoanController(RestClient.Builder restClientBuilder, KuFlowRestClient kuFlowRestClient) {
+        this.restClient = restClientBuilder.build();
         this.kuFlowRestClient = kuFlowRestClient;
         this.processOperations = kuFlowRestClient.getProcessOperations();
         this.processItemOperations = kuFlowRestClient.getProcessItemOperations();
@@ -250,8 +247,7 @@ public class SampleRestWorkerLoanController {
         );
 
         ParameterizedTypeReference<HashMap<String, Object>> responseType = new ParameterizedTypeReference<>() {};
-        RequestEntity<Void> request = RequestEntity.get(endpoint).build();
-        HashMap<String, Object> response = this.restTemplate.exchange(request, responseType).getBody();
+        HashMap<String, Object> response = this.restClient.get().uri(endpoint).retrieve().body(responseType);
 
         Map<String, Double> conversionTable = (Map) response.get(fromTransformed);
         Double conversion = conversionTable.get(toTransformed);

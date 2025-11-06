@@ -27,7 +27,10 @@ spring:
   output:
     ansi:
       enabled: detect
-
+  http:
+    client:
+      connect-timeout: 60s
+      read-timeout: 300s
   devtools:
     restart:
       enabled: true

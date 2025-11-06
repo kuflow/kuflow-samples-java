@@ -15,6 +15,10 @@ spring:
     import:
       - "classpath:config/application-fillme.yaml"
       - "optional:classpath:config/application-local.yaml"
+  http:
+    client:
+      connect-timeout: 60s
+      read-timeout: 300s
 
 server:
   port: 8880
