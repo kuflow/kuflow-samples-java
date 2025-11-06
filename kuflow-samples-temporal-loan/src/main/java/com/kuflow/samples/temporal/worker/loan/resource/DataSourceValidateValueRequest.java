@@ -21,20 +21,29 @@
  * THE SOFTWARE.
  */
 
-package com.kuflow.samples.temporal.worker.loan.activity;
+package com.kuflow.samples.temporal.worker.loan.resource;
 
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryResponse;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueResponse;
-import io.temporal.activity.ActivityInterface;
-import io.temporal.workflow.WorkflowMethod;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import javax.annotation.Nullable;
 
-@ActivityInterface(namePrefix = "DataSource_")
-public interface DataSourceActivities {
-    @WorkflowMethod
-    DataSourceQueryResponse runQuery(DataSourceQueryRequest request);
+/**
+ * Request DTO for data source validation operations.
+ * This is sent to integrator-implemented workflows for validating data source values.
+ */
+public class DataSourceValidateValueRequest extends DataSourceActivityRequest {
 
-    @WorkflowMethod
-    DataSourceValidateValueResponse validateValue(DataSourceValidateValueRequest request);
+    private final List<Object> values = new LinkedList<>();
+
+    public List<Object> getValues() {
+        return Collections.unmodifiableList(this.values);
+    }
+
+    public void setValues(@Nullable List<Object> values) {
+        this.values.clear();
+        if (values != null) {
+            this.values.addAll(values);
+        }
+    }
 }

@@ -30,6 +30,8 @@ import com.kuflow.rest.KuFlowRestClientBuilder;
 import com.kuflow.samples.temporal.worker.loan.SampleEngineWorkerLoanProperties.KuFlowApiProperties;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivitiesImpl;
+import com.kuflow.samples.temporal.worker.loan.activity.DataSourceActivities;
+import com.kuflow.samples.temporal.worker.loan.activity.DataSourceActivitiesImpl;
 import com.kuflow.samples.temporal.worker.loan.common.BearerAuthenticationCredential;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
@@ -74,12 +76,14 @@ public class SampleEngineWorkerLoan {
             .configureWorker(builder -> {
                 KuFlowActivities kuFlowActivities = new KuFlowActivitiesImpl(kuFlowRestClient);
                 CurrencyConversionActivities conversionActivities = new CurrencyConversionActivitiesImpl();
+                DataSourceActivities dataSourceActivities = new DataSourceActivitiesImpl();
 
                 builder
                     .withTaskQueue(properties.getTemporal().getKuflowQueue())
                     .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
                     .withActivitiesImplementations(kuFlowActivities)
-                    .withActivitiesImplementations(conversionActivities);
+                    .withActivitiesImplementations(conversionActivities)
+                    .withActivitiesImplementations(dataSourceActivities);
             });
 
         kuFlowTemporalConnection.start();

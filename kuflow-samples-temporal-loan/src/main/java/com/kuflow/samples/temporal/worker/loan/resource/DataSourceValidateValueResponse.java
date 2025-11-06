@@ -21,20 +21,38 @@
  * THE SOFTWARE.
  */
 
-package com.kuflow.samples.temporal.worker.loan.activity;
+package com.kuflow.samples.temporal.worker.loan.resource;
 
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryResponse;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueResponse;
-import io.temporal.activity.ActivityInterface;
-import io.temporal.workflow.WorkflowMethod;
+import java.util.ArrayList;
+import java.util.List;
 
-@ActivityInterface(namePrefix = "DataSource_")
-public interface DataSourceActivities {
-    @WorkflowMethod
-    DataSourceQueryResponse runQuery(DataSourceQueryRequest request);
+/**
+ * Response DTO for data source query workflows.
+ * This is returned by integrator-implemented workflows.
+ */
+public class DataSourceValidateValueResponse {
 
-    @WorkflowMethod
-    DataSourceValidateValueResponse validateValue(DataSourceValidateValueRequest request);
+    private String error;
+
+    private List<DataSourceValidateValueResult> validations = new ArrayList<>();
+
+    public String getError() {
+        return this.error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public List<DataSourceValidateValueResult> getValidations() {
+        return this.validations;
+    }
+
+    public void setValidations(List<DataSourceValidateValueResult> validations) {
+        this.validations = validations;
+    }
+
+    public void addValidation(DataSourceValidateValueResult validation) {
+        this.validations.add(validation);
+    }
 }

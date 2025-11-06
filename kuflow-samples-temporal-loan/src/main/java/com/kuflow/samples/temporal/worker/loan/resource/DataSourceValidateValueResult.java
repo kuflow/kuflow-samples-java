@@ -21,20 +21,27 @@
  * THE SOFTWARE.
  */
 
-package com.kuflow.samples.temporal.worker.loan.activity;
+package com.kuflow.samples.temporal.worker.loan.resource;
 
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryResponse;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueResponse;
-import io.temporal.activity.ActivityInterface;
-import io.temporal.workflow.WorkflowMethod;
+public class DataSourceValidateValueResult {
 
-@ActivityInterface(namePrefix = "DataSource_")
-public interface DataSourceActivities {
-    @WorkflowMethod
-    DataSourceQueryResponse runQuery(DataSourceQueryRequest request);
+    private boolean valid;
 
-    @WorkflowMethod
-    DataSourceValidateValueResponse validateValue(DataSourceValidateValueRequest request);
+    private String message;
+
+    public boolean isValid() {
+        return this.valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
