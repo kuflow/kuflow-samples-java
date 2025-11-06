@@ -23,6 +23,7 @@
 package com.kuflow.samples.temporal.worker.loan;
 
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
+import com.kuflow.samples.temporal.worker.loan.activity.DataSourceActivities;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.worker.connection.KuFlowTemporalConnection;
@@ -44,17 +45,21 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
 
     private final CurrencyConversionActivities currencyConversionActivities;
 
+    private final DataSourceActivities dataSourceActivities;
+
     private final SampleEngineWorkerLoanProperties sampleEngineWorkerLoanProperties;
 
     public TemporalBootstrap(
         KuFlowTemporalConnection kuFlowTemporalConnection,
         KuFlowActivities kuFlowActivities,
         CurrencyConversionActivities currencyConversionActivities,
+        DataSourceActivities dataSourceActivities,
         SampleEngineWorkerLoanProperties sampleEngineWorkerLoanProperties
     ) {
         this.kuFlowTemporalConnection = kuFlowTemporalConnection;
         this.kuFlowActivities = kuFlowActivities;
         this.currencyConversionActivities = currencyConversionActivities;
+        this.dataSourceActivities = dataSourceActivities;
         this.sampleEngineWorkerLoanProperties = sampleEngineWorkerLoanProperties;
     }
 
@@ -77,6 +82,7 @@ public class TemporalBootstrap implements InitializingBean, DisposableBean {
                 .withWorkflowImplementationTypes(SampleEngineWorkerLoanWorkflowImpl.class)
                 .withActivitiesImplementations(this.kuFlowActivities)
                 .withActivitiesImplementations(this.currencyConversionActivities)
+                .withActivitiesImplementations(this.dataSourceActivities)
         );
 
         this.kuFlowTemporalConnection.start();
