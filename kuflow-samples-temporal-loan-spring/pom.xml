@@ -51,6 +51,10 @@
     </dependency>
     <dependency>
       <groupId>com.kuflow</groupId>
+      <artifactId>kuflow-temporal-activity-datasource</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.kuflow</groupId>
       <artifactId>kuflow-temporal-workflow-kuflow</artifactId>
     </dependency>
     <dependency>

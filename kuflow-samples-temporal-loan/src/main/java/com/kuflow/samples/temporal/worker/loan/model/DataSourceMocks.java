@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 
-package com.kuflow.samples.temporal.worker.loan.resource;
+package com.kuflow.samples.temporal.worker.loan.model;
 
 import java.util.List;
 import java.util.Map;

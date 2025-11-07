@@ -74,7 +74,7 @@
     <spring-boot.version>3.5.6</spring-boot.version>
 
     <!-- Application dependencies -->
-    <kuflow.version>3.5.1</kuflow.version>
+    <kuflow.version>3.5.3</kuflow.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
   </properties>
 
@@ -88,6 +88,11 @@
       <dependency>
         <groupId>com.kuflow</groupId>
         <artifactId>kuflow-temporal-activity-kuflow</artifactId>
+        <version>${kuflow.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.kuflow</groupId>
+        <artifactId>kuflow-temporal-activity-datasource</artifactId>
         <version>${kuflow.version}</version>
       </dependency>
       <dependency>

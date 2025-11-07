@@ -23,12 +23,13 @@
 
 package com.kuflow.samples.temporal.worker.loan.activity;
 
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceMocks;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceQueryResponse;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueRequest;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueResponse;
-import com.kuflow.samples.temporal.worker.loan.resource.DataSourceValidateValueResult;
+import com.kuflow.samples.temporal.worker.loan.model.DataSourceMocks;
+import com.kuflow.temporal.activity.datasource.DataSourceActivities;
+import com.kuflow.temporal.activity.datasource.model.DataSourceQueryRequest;
+import com.kuflow.temporal.activity.datasource.model.DataSourceQueryResponse;
+import com.kuflow.temporal.activity.datasource.model.DataSourceValidateValueRequest;
+import com.kuflow.temporal.activity.datasource.model.DataSourceValidateValueResponse;
+import com.kuflow.temporal.activity.datasource.model.DataSourceValidateValueResult;
 import io.temporal.failure.ApplicationFailure;
 import java.util.List;
 import java.util.Map;

@@ -23,8 +23,8 @@
 package com.kuflow.samples.temporal.worker.loan;
 
 import com.kuflow.samples.temporal.worker.loan.activity.CurrencyConversionActivities;
-import com.kuflow.samples.temporal.worker.loan.activity.DataSourceActivities;
 import com.kuflow.samples.temporal.worker.loan.workflow.SampleEngineWorkerLoanWorkflowImpl;
+import com.kuflow.temporal.activity.datasource.DataSourceActivities;
 import com.kuflow.temporal.activity.kuflow.KuFlowActivities;
 import com.kuflow.temporal.worker.connection.KuFlowTemporalConnection;
 import java.util.concurrent.TimeUnit;
