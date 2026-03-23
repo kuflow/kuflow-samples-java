@@ -25,6 +25,7 @@ package com.kuflow.samples.temporal.worker.loan.activity;
 
 import com.kuflow.samples.temporal.worker.loan.model.DataSourceMocks;
 import com.kuflow.temporal.activity.datasource.DataSourceActivities;
+import com.kuflow.temporal.activity.datasource.model.DataSourceItem;
 import com.kuflow.temporal.activity.datasource.model.DataSourceQueryRequest;
 import com.kuflow.temporal.activity.datasource.model.DataSourceQueryResponse;
 import com.kuflow.temporal.activity.datasource.model.DataSourceValidateValueRequest;
@@ -69,11 +70,7 @@ public class DataSourceActivitiesImpl implements DataSourceActivities {
         }
 
         // Extract all valid product IDs from mock data
-        List<String> validProductIds = DataSourceMocks.MOCK_PRODUCTS.stream()
-            .map(product -> product.get("id"))
-            .filter(Objects::nonNull)
-            .map(Object::toString)
-            .toList();
+        List<String> validProductIds = DataSourceMocks.MOCK_PRODUCTS.stream().map(DataSourceItem::getId).filter(Objects::nonNull).toList();
 
         // Check if all values exist in the product data
         for (Object value : request.getValues()) {
@@ -134,7 +131,7 @@ public class DataSourceActivitiesImpl implements DataSourceActivities {
         String query = workflowRequest.getQuery();
 
         // Filter products by query if provided
-        List<Map<String, Object>> filteredProducts = this.filterProductsByQuery(DataSourceMocks.MOCK_PRODUCTS, query);
+        List<DataSourceItem> filteredProducts = this.filterProductsByQuery(DataSourceMocks.MOCK_PRODUCTS, query);
 
         // Calculate pagination metadata
         long totalElements = filteredProducts.size();
@@ -144,7 +141,7 @@ public class DataSourceActivitiesImpl implements DataSourceActivities {
         int startIndex = pageNumber * pageSize;
         int endIndex = Math.min(startIndex + pageSize, filteredProducts.size());
 
-        List<Map<String, Object>> itemsToReturn;
+        List<DataSourceItem> itemsToReturn;
 
         // If start index is out of range, return empty list
         if (startIndex >= filteredProducts.size()) {
@@ -226,17 +223,17 @@ public class DataSourceActivitiesImpl implements DataSourceActivities {
      * @param query the query string to filter by
      * @return filtered list of products
      */
-    private List<Map<String, Object>> filterProductsByQuery(List<Map<String, Object>> products, String query) {
+    private List<DataSourceItem> filterProductsByQuery(List<DataSourceItem> products, String query) {
         if (query == null || query.trim().isEmpty()) {
             LOGGER.info("No query provided, returning all products");
             return products;
         }
 
         String normalizedQuery = query.toLowerCase().trim();
-        List<Map<String, Object>> filtered = products
+        List<DataSourceItem> filtered = products
             .stream()
             .filter(item -> {
-                Object labelObj = item.get("label");
+                Object labelObj = item.getProperty("label");
                 if (labelObj == null) {
                     return false;
                 }
